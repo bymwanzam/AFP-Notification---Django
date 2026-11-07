@@ -9,5 +9,6 @@ urlpatterns = [
     path("", include("core.urls")),
     path("", include("idsr.urls")),
     path("", include("meningitis.urls")),
+    path("", include("reminders.urls")),
     path("", include("afp.urls")),
 ]

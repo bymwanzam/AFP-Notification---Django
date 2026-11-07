@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     "afp",
     "idsr",
     "meningitis",
+    "reminders",
 ]
 
 MIDDLEWARE = [
@@ -172,9 +173,23 @@ IDSR_IMAGES = DATA_DIR / "idsr-images"           # each region's map and SORMAS 
 # check the sign-in, or by the server only.
 PRIVATE_MEDIA = Path(os.environ.get("PRIVATE_DIR") or BASE_DIR / "private_media")
 
+# SMS reminders to district officers (AFP 60-day follow-up), through Fish Africa (https://docs.letsfish.africa).
+# App ID and App Secret: Fish Africa dashboard > Settings > Applications > Default App. The sender ID (at most 11
+# characters) must be approved by Fish Africa. Run `python manage.py send_reminders` once a day.
+LETSFISH_APP_ID = os.environ.get("LETSFISH_APP_ID", "")
+LETSFISH_APP_SECRET = os.environ.get("LETSFISH_APP_SECRET", "")
+LETSFISH_SENDER_ID = os.environ.get("LETSFISH_SENDER_ID", "")
+REMINDER_SOON_DAYS = int(os.environ.get("REMINDER_SOON_DAYS") or 7)      # remind once when this many days are left
+REMINDER_REPEAT_DAYS = int(os.environ.get("REMINDER_REPEAT_DAYS") or 7)  # then every this many days while overdue
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {"file": {"class": "logging.FileHandler", "filename": BASE_DIR / "django-errors.log", "level": "ERROR"}},
-    "loggers": {"django": {"handlers": ["file"], "level": "ERROR"}},
+    "formatters": {"stamped": {"format": "%(asctime)s %(name)s %(levelname)s %(message)s"}},
+    "handlers": {"file": {"class": "logging.FileHandler", "filename": BASE_DIR / "django-errors.log", "level": "ERROR",
+                          "formatter": "stamped"}},
+    "loggers": {"django": {"handlers": ["file"], "level": "ERROR"},
+                "idsr.dhims2": {"handlers": ["file"], "level": "ERROR", "propagate": False}},
 }
+if "test" in sys.argv[1:2]:  # the test suite's made-up failures stay out of the real error log
+    LOGGING["handlers"]["file"] = {"class": "logging.NullHandler"}

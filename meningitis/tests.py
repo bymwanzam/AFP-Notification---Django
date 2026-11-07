@@ -4,6 +4,7 @@ from datetime import date, timedelta
 
 from django.test import SimpleTestCase
 from openpyxl import Workbook, load_workbook
+from openpyxl.utils import get_column_letter
 
 from core.testing import DataTestCase
 
@@ -228,6 +229,33 @@ class MeningitisTests(DataTestCase):
         self.assertEqual(r.json()["unchanged"], 1, r.content)
         with_names = load_workbook(io.BytesIO(self.client.get("/api/men/linelist.xlsx?names=1").content)).active
         self.assertEqual(with_names.cell(row=5, column=1).value, "Abdul")
+
+    def test_blank_template_has_drop_downs_and_uploads_back(self):
+        r = self.client.get("/api/men/template.xlsx")
+        self.assertEqual(r.status_code, 200)
+        wb = load_workbook(io.BytesIO(r.content))
+        ws = wb["Outbreak linelist"]
+        headers = [c.value for c in ws[4]]
+        self.assertEqual(headers[:2], ["LastName", "FirstName"])
+        sex = get_column_letter(headers.index("Sex") + 1)
+        self.assertTrue(any(f"{sex}5" in str(dv.sqref) and dv.type == "list" for dv in ws.data_validations.dataValidation))
+        self.assertIn("Gushegu", [c.value for c in wb["Lists"]["Q"]] + [c.value for row in wb["Lists"].iter_rows() for c in row])
+        # filled in with one case, it uploads
+        yy = f"{SEEN.year % 100:02d}"
+        row = {"CCC": "GHA", "RRR": "NOR", "DDD": "GUS", "YY": yy, "NNNNN": 4, "District": "Gushegu", "DateConsultation": SEEN,
+               "Sex": "F-Female", "Outcome": "1-Alive", "AgeYears": 9}
+        for h, v in row.items():
+            ws.cell(row=5, column=headers.index(h) + 1, value=v)
+        buf = io.BytesIO()
+        wb.save(buf)
+        plan = self.client.post("/api/men/import?name=t.xlsx&apply=1", buf.getvalue(), content_type="application/octet-stream").json()
+        self.assertEqual((plan["counts"]["added"], plan["skipped"], plan["counts"]["errors"]), (1, 0, 0), plan)
+
+    def test_the_national_view_offers_regions_to_switch_to(self):
+        self.sign_in(self.account("national", region="Ghana"))
+        data = self.client.get("/meningitis").context["data"]
+        self.assertFalse(data["canWrite"])
+        self.assertIn("Northern", data["regions"])
 
     def test_subdistricts_and_thresholds(self):
         r = self.post("/api/men/subdistricts", {"rows": [{"district": "Gushegu", "name": "Katani", "population": "12000"},

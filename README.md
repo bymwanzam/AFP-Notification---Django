@@ -19,6 +19,7 @@ The desktop-only tools of the local app (the Tk entry form `app.py`, the Windows
 | `accounts/` | Accounts (Django users and a `Profile` with region, cadre and picture), sign-in, lockout, passwords, profile, the Accounts page |
 | `afp/` | AFP register (`register.py`), case list (`cases.py`), Excel report (`report.py`), views |
 | `idsr/` | IDSR stores (`store.py`), DHIMS2 (`dhims2.py`), bulletin data (`bulletin.py`), the official form template (`data/`), views |
+| `reminders/` | SMS reminders to district officers: Fish Africa client (`letsfish.py`), rules (`service.py`), the daily command `send_reminders`, the page |
 | `meningitis/` | Line list models (`models.py`), code lists (`choices.py`), columns (`linelist.py`), saving and checks (`cases.py`), reports (`reports.py`), upload (`importer.py`), Excel downloads (`exports.py`), views |
 | `<app>/templates/`, `<app>/static/` | Each page's HTML template, CSS and JavaScript |
 | `data/` | The workbooks the app reads and writes (not in git) |
@@ -114,8 +115,25 @@ Open it from the start page or at `/meningitis`. Unlike the AFP register and the
 - **Upload**: the regional workbook (both line list sheets) or a download from the page. Cases are matched by EPID; rows with no EPID (Filter 0) are skipped; blank cells never erase anything; codes written in other ways ("9 unknown", "Missing", "2 GND") are read back to the list and counted in the review. Nothing is saved until you apply the review.
 - **Sub-districts and thresholds**: each sub-district's population sets its weekly alert and epidemic thresholds. The WHO defaults are 3 and 10 cases per 100,000 a week; at or under 30,000 people (or with no population on file), 2 and 5 cases in a week. The season starts in epi week 39. Each region can change these. Sub-districts named in an upload are added without a population.
 - **Reports** (Excel and PDF): weekly cases and deaths by sub-district with the thresholds (cells amber for alert, red for epidemic), the district summary, the regional summary (by district, age group, sex, final lab result and sub-district, with CFR), the epi curve by final classification, vaccination and indicators (with data completeness), laboratory results, and one threshold chart per sub-district. Each covers a year, either the season (from week 39 of the year before) or the calendar year, optionally a range of weeks and one district. Every report's totals equal the number of cases in the line list for the same filters.
-- **Who can do what**: regional accounts add and change their region's cases. Whoever entered a case can delete it within 24 hours; support can delete any. The Ghana view reads every region and changes nothing. Every change is logged (the case form shows it).
+- **Who can do what**: regional accounts add and change their region's cases. Whoever entered a case can delete it within 24 hours; support can delete any. The Ghana view reads every region and changes nothing; its New case and Upload tabs ask for the region first. Every change is logged (the case form shows it).
+- **Faster entry**: *Save and add another* keeps the district, facility, sub-district and date seen for the next case. The Upload tab has a blank template with drop-down lists for every coded column.
 
+## SMS reminders (AFP 60-day follow-up)
+
+Who does what on the *SMS reminders* page: **regional officers** add and change their own region's district officers and see its reminders and log; the **support account** (super admin) holds the Fish Africa settings and is the only one who sends from the page (*Send now*, test SMS), in any region; **national administrators** read every region. The daily job sends every region's reminders.
+
+District officers get an SMS through [Fish Africa](https://docs.letsfish.africa) for their district's AFP cases: once when a case enters its last 7 days before the day-60 follow-up visit, then once it is overdue and every 7 days until its Outcome is "FUP done" (the AFP page's own rules). Each officer gets one SMS per run listing their cases by EPID number and due date; patient names are never sent. Each case and stage goes to each phone once; a failed send is tried again on the next run.
+
+1. **Fish Africa account**: in its dashboard, *Settings* > *Applications* > *Default App*, copy the App ID and App Secret. Ask Fish Africa to approve a sender ID (at most 11 characters, e.g. `GHS-AFP`).
+2. **Settings** (support account only): sign in as support, open *SMS reminders* (`/reminders`) and enter the App ID, App Secret and sender ID under *Fish Africa settings*. They are kept in `private_media/sms.json` (never served; the secret is never shown again). `LETSFISH_APP_ID`, `LETSFISH_APP_SECRET` and `LETSFISH_SENDER_ID` in `.env` also work; the page's values win. Optional in `.env`: `REMINDER_SOON_DAYS` (default 7) and `REMINDER_REPEAT_DAYS` (default 7).
+3. **Officers** (each regional team, for its own region): on the same page, add each district officer's name and phone number (choose *Whole region* for someone who should get every district's), then send a test SMS.
+4. **Daily job**: `python manage.py send_reminders` sends today's reminders (`--dry-run` shows them without sending). Schedule it once a day:
+   - cPanel *Cron Jobs*: `0 8 * * * cd ~/surveillance && ~/virtualenv/surveillance/3.12/bin/python manage.py send_reminders`
+   - Windows: `schtasks /Create /SC DAILY /ST 08:00 /TN "AFP SMS reminders" /TR "cmd /c cd /d \"<project folder>\" && python manage.py send_reminders"`
+
+The page also has *Send now* (the same reminders, earlier) and the log of what was sent.
+
+## Maintenance
 
 - Org units: `python manage.py orgunits` lists them. `python manage.py orgunits --import <regions.json> <districts.json>` refreshes them from DHIS2 exports. Corrections to the exports are in `CORRECTIONS` in `core/orgunits.py` (16 regions, 261 districts).
 - Logos are in `core/static/core/img/`. Support contacts are in `core/branding.py`.

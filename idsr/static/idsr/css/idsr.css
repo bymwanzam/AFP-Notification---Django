@@ -1,5 +1,5 @@
 /* Weekly IDSR: same shell as the AFP page, wider for the count grid and the A4 bulletin. */
-.wrap { max-width: 900px; }
+/* Width: the shared .wrap (base.css). The A4 bulletin keeps its fixed width, centred. */
 .hero-sub { margin: -6px 0 0; font-family: var(--mono); font-size: .8rem; opacity: .85; position: relative; z-index: 1; }
 .hstats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; position: relative; z-index: 1; }
 .hstat { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 10px; padding: 10px 12px; display: grid; gap: 5px; min-width: 0; }
@@ -90,3 +90,7 @@ details.panel[open] > summary::after { transform: rotate(180deg); }
   .bpage, .bpage * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 @page { size: A4 portrait; margin: 0; }
+
+/* the "AFP 60-day tracker" tick box beside its label (the report filters lay labels out as a grid) */
+.rep-filters label.check { display: flex; align-items: center; gap: 10px; }
+.rep-filters label.check input { margin-top: 0; }

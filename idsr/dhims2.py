@@ -1,15 +1,18 @@
 """Fetch the weekly IDSR figures from DHIMS2 (Ghana's DHIS2) into the Weekly IDSR store.
 
 Sign-in is a DHIS2 personal access token (DHIMS2 → your profile → Personal access tokens). The token is sent
-only to the DHIMS2 address set here and never to the page. It stays in memory while the app runs, and is
-written to disk only when "remember" is ticked: then to config_file(), in PRIVATE_MEDIA, which is never served.
+only to the DHIMS2 address set here and never to the page. It is kept with the sign-in (Django's server-side
+session, so every process of the app sees it, until sign-out), and written to disk only when "remember" is ticked: then to config_file(), in PRIVATE_MEDIA, which is never served.
 
 Figures come from the DHIMS2 analytics API, summed by district and epi week, so they are as fresh as the last
 analytics run on DHIMS2 (usually overnight). Which DHIMS2 data element fills which IDSR column is a mapping,
 suggested from the names and kept per data set in config_file().
 """
+import contextvars
 import json
+import logging
 import re
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -22,8 +25,22 @@ from .store import COLS, DISEASES, HEAD, check_week
 
 DEFAULT_URL = "https://dhims.chimgh.org/dhims"
 TIMEOUT = 90
+# DHIMS2 sits behind Cloudflare, which refuses Python's default User-Agent ("Python-urllib", error 1010), so the
+# app names itself.
+USER_AGENT = "GHS-Surveillance/1.0"
+# Every failed call is written to django-errors.log (path, status, DHIMS2's message and how long it took; never the
+# token), so a failed fetch can be looked into afterwards.
+log = logging.getLogger("idsr.dhims2")
 UID = re.compile(r"^[A-Za-z][A-Za-z0-9]{10}$")
-_session = {"token": None}   # the token for this run of the app, remembered or not
+# The token of the request being served, from the signed-in user's server-side session: the hosting server runs the
+# app in several processes, so a token held in one process's memory is missing in the next request's process.
+_request_token = contextvars.ContextVar("dhims2_token", default=None)
+SESSION_KEY = "dhims2_token"
+
+
+def use_session(session):
+    """Called for each DHIMS2 request: the token this sign-in connected with, if any."""
+    _request_token.set(session.get(SESSION_KEY))
 
 # Words in DHIMS2 data element (and category option) names that point to each IDSR disease and measure.
 DISEASE_WORDS = {
@@ -60,7 +77,8 @@ def save(cfg):
 
 
 def token():
-    return _session["token"] or load().get("token")
+    """This sign-in's token, else the one remembered (ticked "Remember") for everyone on this app."""
+    return _request_token.get() or load().get("token")
 
 
 def public_config():
@@ -80,30 +98,54 @@ def clean_url(url):
 
 
 # ---------- talking to DHIMS2 ----------
+class NotFound(ValueError):
+    """DHIMS2 answered 404: the thing asked for (an org unit id, a data set) does not exist there."""
+
+
 def call(path, params=None, url=None, tok=None):
     base, tok = clean_url(url or load().get("url") or DEFAULT_URL), tok or token()
     if not tok:
+        log.error("DHIMS2 %s: no token (not connected in this run of the app, and not remembered)", path)
         raise ValueError("Connect to DHIMS2 with your access token first.")
     query = urllib.parse.urlencode(params or {}, doseq=True, safe=":;.,[]")
     req = urllib.request.Request(f"{base}/api/{path}" + (f"?{query}" if query else ""),
-                                 headers={"Authorization": f"ApiToken {tok}", "Accept": "application/json"})
+                                 headers={"Authorization": f"ApiToken {tok}", "Accept": "application/json",
+                                          "User-Agent": USER_AGENT})
+    started = time.monotonic()
     try:
         with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
             body = r.read()
     except urllib.error.HTTPError as e:
+        raw = e.read()
         try:
-            detail = json.loads(e.read()).get("message", "")
+            detail = json.loads(raw).get("message", "")
         except Exception:
             detail = ""
+        log.error("DHIMS2 %s -> HTTP %s after %.1fs: %s", f"{base}/api/{path}?{query}"[:600], e.code,
+                  time.monotonic() - started, detail or raw[:200].decode(errors="replace"))
+        if b"error code: 10" in raw[:200]:  # Cloudflare refused the request before it reached DHIMS2
+            raise ValueError(f"The DHIMS2 firewall (Cloudflare) refused the request ({raw[:40].decode(errors='replace').strip()}). "
+                             "Try again later, or ask the DHIMS2 team to allow this app.") from None
+        if e.code == 400 and re.search(r"token|checksum", detail, re.I):
+            raise ValueError("DHIMS2 did not recognise this token. Copy it again in full (it starts with d2pat_) and connect.") from None
+        if e.code == 404:
+            # the address is right (DHIMS2 answered); what was asked for is not there
+            raise NotFound(f"DHIMS2: {detail}" if detail else f"DHIMS2 has nothing at /api/{path.split('?')[0]}. "
+                           "If this keeps happening, check the DHIMS2 address.") from None
         raise ValueError({
             401: "DHIMS2 did not accept the token. It may have expired or been revoked: create a new one and connect again.",
             403: "Your DHIMS2 account is not allowed to read this. " + detail,
-            404: f"Not found at {base}. Check the DHIMS2 address.",
         }.get(e.code) or f"DHIMS2 answered with error {e.code}. {detail}".strip()) from None
     except (urllib.error.URLError, TimeoutError, OSError) as e:
         reason = getattr(e, "reason", e)
+        took = time.monotonic() - started
+        log.error("DHIMS2 %s -> no answer after %.1fs: %s", f"{base}/api/{path}?{query}"[:600], took, reason)
+        if took >= TIMEOUT - 1 or "timed out" in str(reason).lower():
+            raise ValueError(f"DHIMS2 took longer than {TIMEOUT} seconds to answer. Fetch fewer weeks at a time "
+                             "(for example one or four), or try again later when DHIMS2 is less busy.") from None
         raise ValueError(f"Could not reach DHIMS2 at {base} ({reason}). Check the internet connection and the address.") from None
     if body.lstrip()[:1] == b"<":
+        log.error("DHIMS2 %s -> a web page instead of data", f"{base}/api/{path}"[:300])
         raise ValueError("DHIMS2 sent back a web page instead of data (often its login page). Check the address and the token.")
     return json.loads(body)
 
@@ -120,12 +162,12 @@ def connect(url, tok, remember):
     else:
         cfg.pop("token", None)
     save(cfg)
-    _session["token"] = tok
+    _request_token.set(tok)
     return public_config()
 
 
 def forget():
-    _session["token"] = None
+    _request_token.set(None)
     cfg = load()
     cfg.pop("token", None)
     save(cfg)
@@ -209,6 +251,43 @@ def save_mapping(ds, mapping):
     return clean
 
 
+# ---------- org units: DHIMS2's own ids ----------
+def region_id(unit):
+    """(DHIMS2 id, level) of a region. The ids in core/data/ghana-org-units.json come from a DHIS2 export and may not
+    be DHIMS2's (Upper East's was not): an id DHIMS2 does not know is looked up by the region's name instead, and the
+    one found is remembered in config_file()."""
+    cached = load().get("orgUnitIds", {}).get(unit["name"])
+    if isinstance(cached, list) and len(cached) == 2:  # [id, level], found on DHIMS2 before
+        return cached[0], int(cached[1])
+    uid = unit.get("id")
+    if uid:
+        try:
+            level = int(call(f"organisationUnits/{uid}", {"fields": "id,level"})["level"])
+            remember_unit(unit["name"], uid, level)
+            return uid, level
+        except NotFound:
+            pass
+    found = call("organisationUnits", {"filter": f"name:ilike:{unit['name']}", "fields": "id,name,level", "paging": "false"})
+    want = orgunits.bare(unit["name"])
+    matches = [o for o in found.get("organisationUnits", [])
+               if orgunits.bare(re.sub(r"(?i)\s*region$", "", o.get("name", ""))) == want and o.get("level")]
+    if not matches:
+        raise ValueError(f"DHIMS2 has no org unit called {unit['name']} (looked up by name, as its id "
+                         f"{unit.get('id') or '(none)'} is not on DHIMS2). Ask the DHIMS2 team for the region's id.")
+    best = min(matches, key=lambda o: o["level"])  # the region itself, not a district or facility of the same name
+    remember_unit(unit["name"], best["id"], best["level"])
+    log.error("DHIMS2 org unit for %s: id %s was not found, using %s (%s, level %s) found by name",
+              unit["name"], unit.get("id"), best["id"], best.get("name"), best["level"])
+    return best["id"], int(best["level"])
+
+
+def remember_unit(name, uid, level):
+    cfg = load()
+    cfg.setdefault("orgUnitIds", {})[name] = [uid, int(level)]
+    save(cfg)
+
+
+
 # ---------- fetching ----------
 def analytics(dx, periods, ou):
     """[(item, period, org unit id, value)] and org unit names, asking for a few items at a time to keep URLs short."""
@@ -241,17 +320,15 @@ def fetch(store, ds, mapping, year, first, last):
     if getattr(store, "national", False):
         # Ghana: the figures of each region (DHIMS2 adds up its districts), one row per region.
         unit = orgunits.national_unit()
-        if not unit["ids"]:
-            raise ValueError("The regions have no DHIMS2 org unit ids.")
-        ou = ";".join(unit["ids"].values())
+        ids = {r["code"]: region_id(r)[0] for r in orgunits.ORG_UNITS}
+        unit = unit | {"ids": ids}
+        ou = ";".join(ids.values())
     else:
         unit = orgunits.region_of(store.region)
-        if not unit or not unit.get("id"):
-            raise ValueError(f"{store.region or 'This region'} has no DHIMS2 org unit id.")
-        level = call(f"organisationUnits/{unit['id']}", {"fields": "level"}).get("level")
-        if not level:
-            raise ValueError(f"DHIMS2 has no org unit {unit['id']} for {unit['name']}.")
-        ou = f"{unit['id']};LEVEL-{int(level) + 1}"
+        if not unit:
+            raise ValueError(f"{store.region or 'This region'} is not in the org unit list.")
+        uid, level = region_id(unit)
+        ou = f"{uid};LEVEL-{level + 1}"
 
     items = sorted(set(mapping.values()))
     rows, names = analytics(items, periods, ou)

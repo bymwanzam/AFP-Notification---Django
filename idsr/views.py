@@ -41,13 +41,18 @@ def store_call(view):
     @wraps(view)
     def wrapped(request, *args, **kwargs):
         store = region_store(request)  # OtherRegion is answered by @api
+        dhims2.use_session(request.session)
         try:
             return view(request, store, *args, **kwargs)
         except PermissionError:
             return error(409, LOCKED)
         except ValueError as e:
+            if "/dhims2" in request.path:
+                dhims2.log.error("%s %s told the page: %s", request.method, request.path, e)
             return error(400, str(e))
         except Exception as e:
+            if "/dhims2" in request.path:
+                dhims2.log.exception("%s %s failed", request.method, request.path)
             return error(500, f"Could not read the IDSR data: {e}" if request.method == "GET" else f"Save failed: {e}")
     return wrapped
 
@@ -190,6 +195,7 @@ def dhims2_elements(request, store):
 def dhims2_connect(request, store):
     req = body_json(request)
     cfg = dhims2.connect(req.get("url"), req.get("token"), bool(req.get("remember")))
+    request.session[dhims2.SESSION_KEY] = dhims2.token()  # kept with this sign-in, on the server, for every process
     return ok(cfg | {"dataSets": dhims2.data_sets()})
 
 
@@ -197,6 +203,7 @@ def dhims2_connect(request, store):
 @api
 @store_call
 def dhims2_forget(request, store):
+    request.session.pop(dhims2.SESSION_KEY, None)
     return ok(dhims2.forget())
 
 

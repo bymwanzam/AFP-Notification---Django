@@ -12,7 +12,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
 from core import orgunits
-from core.access import api, body_json, error, is_support, ok, page, page_data, unit
+from core.access import api, body_json, error, is_support, ok, page, page_data, sees_all, unit
 from core.branding import letterhead, unit_label
 
 from . import cases, exports, importer, linelist, reports
@@ -68,7 +68,9 @@ def snapshot(request):
             "subdistricts": subdistricts(here), "cfg": reports.cfg_dict(ThresholdConfig.for_region(here["name"])),
             "canWrite": not orgunits.is_national(here), "support": is_support(request), "user": request.user.username,
             "years": years, "today": {"year": today[0], "week": today[1]}, "reports": reports.KINDS,
-            "count": cases.region_cases(here).count()}
+            "count": cases.region_cases(here).count(),
+            # support and national administrators can switch to a region from the page, to enter cases
+            "regions": [r["name"] for r in orgunits.ORG_UNITS] if sees_all(request) else []}
 
 
 # ---------- page and reads ----------
@@ -163,6 +165,15 @@ def linelist_xlsx(request):
     title = f"MENINGITIS LINE LIST – {unit_label(here).upper()} – downloaded {timezone.localtime():%d/%m/%Y %H:%M}"
     body = exports.linelist_xlsx(listed(request), title, names=names)
     return attachment(body, XLSX_TYPE, f"Meningitis line list - {here['name']}{'' if names else ' (no names)'}.xlsx")
+
+
+@require_GET
+@api
+@men_call
+def template_xlsx(request):
+    """A blank line list to fill in and upload, with drop-down lists for the coded columns."""
+    here = unit(request)
+    return attachment(exports.template_xlsx(here), XLSX_TYPE, f"Meningitis line list template - {here['name']}.xlsx")
 
 
 # ---------- writes ----------

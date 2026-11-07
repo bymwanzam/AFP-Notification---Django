@@ -5,7 +5,7 @@
   --alert: #ffc000; --epidemic: #e00000;
   --c-confirmed: #8b1a1a; --c-probable: #e07b00; --c-suspect: #8c8c8c; --c-none: #c9c9c9;
 }
-.wrap { max-width: 1180px; }
+/* Width: the shared .wrap (base.css). */
 .mono { font-family: var(--mono); }
 .readonly-note { font-size: .9rem; }
 .readonly-note a { color: var(--accent); font-weight: 600; }

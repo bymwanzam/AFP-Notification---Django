@@ -1,0 +1,29 @@
+/* SMS reminders: the shared shell; message previews look like phone messages. */
+/* Width: the shared .wrap (base.css). */
+.mono { font-family: var(--mono); }
+.readonly-note a { color: var(--accent); font-weight: 600; }
+.setup-note { border-color: var(--warn); background: var(--warn-soft); }
+.setup-note code { font-size: .8rem; }
+.tally { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.msgs { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.msg { display: grid; gap: 8px; align-content: start; }
+.msg .to { display: flex; justify-content: space-between; gap: 8px; font-size: .84rem; }
+.msg .to b { font-weight: 600; }
+.msg .to span { font-family: var(--mono); color: var(--muted); font-size: .78rem; }
+.bubble { white-space: pre-line; font-size: .86rem; line-height: 1.45; padding: 12px 14px; border-radius: 16px 16px 16px 4px;
+  background: var(--accent-soft); color: var(--ink); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); }
+.msg .meta { font-size: .74rem; color: var(--muted); }
+.msg.sent .bubble { background: var(--ok-soft); border-color: color-mix(in srgb, var(--ok) 30%, transparent); }
+.msg.failed .bubble { background: var(--flash-soft); border-color: color-mix(in srgb, var(--flash) 30%, transparent); }
+.msg .fail { color: var(--flash); font-size: .8rem; margin: 0; }
+table.stab { border-collapse: separate; border-spacing: 0; width: 100%; font-size: .86rem; }
+.stab th, .stab td { padding: 7px 10px; border-bottom: 1px solid var(--rule); text-align: left; white-space: nowrap; }
+.stab thead th { font-family: var(--mono); font-size: .66rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+.stab tbody tr:last-child td { border-bottom: 0; }
+.stab td .in { padding: 6px 8px; border-radius: 8px; }
+.stab td.x { width: 1%; }
+.stab .okk { color: var(--ok); font-weight: 600; } .stab .bad { color: var(--flash); font-weight: 600; }
+.stab .muted { color: var(--muted); }
+.trow { display: flex; gap: 8px; flex-wrap: wrap; } .trow .in { max-width: 240px; }
+.empty-msg { color: var(--muted); padding: 10px 0; }
+@media (max-width: 640px) { .tally { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

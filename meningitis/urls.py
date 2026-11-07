@@ -13,6 +13,7 @@ urlpatterns = [
     path("api/men/report", views.report),
     path("api/men/report.xlsx", views.report_xlsx),
     path("api/men/linelist.xlsx", views.linelist_xlsx),
+    path("api/men/template.xlsx", views.template_xlsx),
     path("api/men/import", views.import_file),
     path("api/men/subdistricts", views.save_subdistricts),
     path("api/men/thresholds", views.save_thresholds),

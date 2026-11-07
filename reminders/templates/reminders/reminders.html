@@ -1,0 +1,95 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SMS Reminders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="{% static 'core/css/base.css' %}">
+<link rel="stylesheet" href="{% static 'reminders/css/reminders.css' %}">
+</head>
+<body>
+<div class="wrap">
+  <nav class="modules" aria-label="Modules">
+    <a href="/" data-m="afp">AFP 60-day follow-up</a>
+    <a href="/idsr" data-m="idsr">Weekly IDSR</a>
+    <a href="/meningitis" data-m="men">Meningitis</a>
+    <a href="/reminders" data-m="sms" aria-current="page">SMS reminders</a>
+    <a class="region-link" href="/start" data-m="start"><span id="navRegion"></span> · <b>Change</b></a>
+    <a class="signout" href="/profile?next=/reminders" data-m="profile">Profile</a>
+    <a class="signout" href="/logout" data-m="logout">Sign out</a>
+  </nav>
+  <header>
+    <div class="brand">
+      <span class="brand-logo"><img src="{{ logo }}" alt="{{ logo_alt }}"></span>
+      <h1><span class="slug">AFP · SMS REMINDERS · <span id="regionSlug"></span></span><span>District officer reminders</span></h1>
+    </div>
+    <div class="status"><span><span class="dot" id="smsDot"></span><span id="smsText"></span></span></div>
+  </header>
+
+  <section class="panel setup-note" id="setupNote" hidden></section>
+
+  {% if support %}{# support only: never in the page for other accounts #}
+  <section class="panel" id="settingsPanel">
+    <div class="toolbar"><p class="label">Fish Africa settings · support only</p><span class="note" id="sSource"></span></div>
+    <p class="hint">From the Fish Africa dashboard: <b>Settings</b> › <b>Applications</b> › <b>Default App</b>. The sender ID (at most 11 characters, e.g. GHS-AFP) must be approved by Fish Africa. The secret is kept on the server and never shown again: leave it blank to keep the saved one.</p>
+    <div class="grid three">
+      <div class="field"><div class="fhead"><label for="sAppId">App ID</label></div><input class="in mono" id="sAppId" autocomplete="off" spellcheck="false"></div>
+      <div class="field"><div class="fhead"><label for="sSecret">App Secret</label></div><input class="in mono" id="sSecret" type="password" autocomplete="new-password" spellcheck="false"></div>
+      <div class="field"><div class="fhead"><label for="sSender">Sender ID</label></div><input class="in mono" id="sSender" maxlength="11" autocomplete="off" placeholder="GHS-AFP"></div>
+    </div>
+    <div class="toolbar"><button class="btn danger" type="button" id="sClear">Remove saved settings</button><button class="btn solid" type="button" id="sSave">Save settings</button></div>
+  </section>
+  {% endif %}
+
+  <section class="panel readonly-note" id="readOnly" hidden>
+    <p class="label">Ghana (all regions)</p>
+    <p class="hint">This view shows every region's officers, reminders and log. Officers are added, and reminders sent, for one region: choose it here. Every region's reminders also go out with the daily job.</p>
+    <div class="trow"><select class="in" id="regionPick" aria-label="Region"></select><button class="btn solid" type="button" id="regionGo">Open this region</button></div>
+  </section>
+
+  <div class="tally" id="tally"></div>
+
+  <section class="panel">
+    <div class="toolbar"><p class="label">Today's reminders</p><span class="note" id="rules"></span></div>
+    <div id="preview"></div>
+    <div class="toolbar"><span class="note" id="sendNote"></span><button class="btn solid" type="button" id="sendNow">Send now</button></div>
+  </section>
+
+  <section class="panel">
+    <div class="toolbar"><p class="label">District officers who get the reminders</p><span class="note" id="cCount"></span></div>
+    <p class="hint">Added by the regional surveillance team. Each officer gets the reminders for the cases of their district. Choose <b>Whole region</b> for someone who should get every district's (e.g. the regional surveillance officer). Numbers like 0244123456.</p>
+    <div class="tscroll"><table class="stab" id="cTable"></table></div>
+    <div class="toolbar"><button class="btn" type="button" id="cAdd">Add officer</button><button class="btn solid" type="button" id="cSave">Save officers</button></div>
+    <p class="err" id="cErr" role="alert"></p>
+  </section>
+
+  {% if support %}
+  <section class="panel" id="testPanel">
+    <p class="label">Test SMS</p>
+    <p class="hint">Send one short test message to check the Fish Africa account and the sender ID.</p>
+    <div class="trow"><input class="in mono" id="testPhone" inputmode="tel" placeholder="0244123456" aria-label="Phone number for the test"><button class="btn" type="button" id="testSend">Send test SMS</button></div>
+  </section>
+  {% endif %}
+
+  <section class="panel">
+    <div class="toolbar"><p class="label">Sent</p><span class="note">Latest 60</span></div>
+    <div class="tscroll"><table class="stab" id="logTable"></table></div>
+  </section>
+
+  <footer class="site-foot">
+    <span>© <span class="year"></span> {{ org }}. All rights reserved.</span>
+    <span class="support"><span>Support</span>
+      <a href="{{ support.wa_link }}" target="_blank" rel="noopener">WhatsApp {{ support.wa_number }}</a>
+      <a href="mailto:{{ support.email }}">{{ support.email }}</a></span>
+  </footer>
+</div>
+<div class="toast" id="toast" hidden role="status"></div>
+
+{{ data|json_script:"page-data" }}
+<script src="{% static 'core/js/csrf.js' %}"></script>
+<script src="{% static 'reminders/js/reminders.js' %}"></script>
+</body>
+</html>

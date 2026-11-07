@@ -716,7 +716,7 @@ $('#expXlsx').addEventListener('click', async () => {
 });
 
 // In the app, the region link goes back to the start page to pick another region.
-document.querySelectorAll('.modules a').forEach(a => { if (DATA.live) a.href = { afp: '/', idsr: '/idsr', men: '/meningitis', start: '/start', admin: '/admin', profile: '/profile?next=' + encodeURIComponent('/'), logout: '/logout' }[a.dataset.m]; else if (['start', 'admin', 'profile', 'logout', 'men'].includes(a.dataset.m)) a.remove(); });
+document.querySelectorAll('.modules a').forEach(a => { if (DATA.live) a.href = { afp: '/', idsr: '/idsr', men: '/meningitis', sms: '/reminders', start: '/start', admin: '/admin', profile: '/profile?next=' + encodeURIComponent('/'), logout: '/logout' }[a.dataset.m]; else if (['start', 'admin', 'profile', 'logout', 'men', 'sms'].includes(a.dataset.m)) a.remove(); });
 document.querySelectorAll('.region-link, .signout').forEach(a => a.hidden = false);
 
 // The support account gets its Accounts page link (and, on these pages, its extra tools).

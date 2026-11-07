@@ -53,6 +53,69 @@ def linelist_xlsx(qs, title, names=True):
     return to_bytes(wb)
 
 
+TEMPLATE_ROWS = 1000
+
+
+def template_xlsx(unit):
+    """A blank line list in the download's layout (so the upload reads it), with drop-down lists for the coded
+    columns and the region's districts, and date cells. EPID and Epi Week are left blank: the app works them out."""
+    from openpyxl.worksheet.datavalidation import DataValidation
+
+    from . import choices as ch
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Outbreak linelist"
+    lists = wb.create_sheet("Lists")
+    headers = [f.header for f in FIELDS]
+    at = headers.index("NNNNN") + 1
+    headers[at:at] = ["EPID", "Epi Week"]
+    ws["A1"] = f"MENINGITIS LINE LIST – {unit['name'].upper()} – blank template"
+    ws["A1"].font = Font(bold=True, size=13)
+    ws["A2"] = (f"One row per patient. CCC = GHA, RRR = {unit.get('epid', '')}, DDD = the district's code, YY = year (e.g. 26), "
+                "NNNNN = case number. Leave EPID and Epi Week blank. Pick coded answers from the drop-down lists. "
+                "Upload it on the Meningitis page, under Upload.")
+    ws.append([])
+    ws.append(headers)
+    for c in ws[4]:
+        c.font, c.fill, c.border, c.alignment = BOLD, HEAD, BOX, CENTER
+    by_header = {f.header: f for f in FIELDS}
+    # the Lists sheet: one column per code list, and the region's districts
+    columns = {name: [f"{c}-{t}" for c, t in ch.LISTS[name]] for name in ch.LISTS}
+    columns["district"] = [n for _, n in unit["districts"]]
+    ranges = {}
+    for j, (name, values) in enumerate(columns.items(), 1):
+        letter = get_column_letter(j)
+        lists.cell(row=1, column=j, value=name).font = BOLD
+        for i, v in enumerate(values, 2):
+            lists.cell(row=i, column=j, value=v)
+        ranges[name] = f"Lists!${letter}$2:${letter}${len(values) + 1}"
+        lists.column_dimensions[letter].width = 26
+    last = 4 + TEMPLATE_ROWS
+    for i, h in enumerate(headers, 1):
+        col, f = get_column_letter(i), by_header.get(h)
+        ws.column_dimensions[col].width = max(9, min(26, len(h) + 4))
+        cells = f"{col}5:{col}{last}"
+        source = ranges.get(f.list) if f and f.kind == "choice" else ranges["district"] if f and f.kind == "district" and columns["district"] else None
+        if source:
+            dv = DataValidation(type="list", formula1=source, allow_blank=True, showErrorMessage=True,
+                                errorTitle=f.label, error="Pick an answer from the list.")
+        elif f and f.kind == "date":
+            dv = DataValidation(type="date", operator="between", formula1="DATE(2000,1,1)", formula2="TODAY()", allow_blank=True,
+                                showErrorMessage=True, errorTitle=f.label, error="Enter a date (dd/mm/yyyy), not in the future.")
+            for r in range(5, last + 1):
+                ws.cell(row=r, column=i).number_format = "dd/mm/yyyy"
+        elif f and f.kind == "int":
+            top = {"age_months": 11, "age_years": 120}.get(f.name, 99999)
+            dv = DataValidation(type="whole", operator="between", formula1="0", formula2=str(top), allow_blank=True,
+                                showErrorMessage=True, errorTitle=f.label, error=f"A whole number from 0 to {top}.")
+        else:
+            continue
+        ws.add_data_validation(dv)
+        dv.add(cells)
+    ws.freeze_panes = ws.cell(row=5, column=at + 3)
+    return to_bytes(wb)
+
+
 # ---------- reports ----------
 def heading(ws, rep, width):
     ws["A1"] = rep["title"]

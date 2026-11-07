@@ -7,7 +7,7 @@
 .pic .acts { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 .btn.danger { border-color: var(--flash); color: var(--flash); }
 .btn.danger:hover:not(:disabled) { background: var(--flash-soft); }
-.form { display: grid; gap: 16px; }
+.form { display: grid; gap: 16px; max-width: 720px; }
 .form .field { display: grid; gap: 6px; }
 .ro { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .ro div { border: 1px solid var(--rule); border-radius: 9px; padding: 10px 12px; display: grid; gap: 2px; }

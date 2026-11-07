@@ -41,19 +41,42 @@ renderStatus();
 $('#readOnly').hidden = DATA.canWrite;
 document.querySelectorAll('.adminlink').forEach(a => a.hidden = !DATA.support);
 document.querySelectorAll('.year').forEach(e => e.textContent = new Date().getFullYear());
-if (!DATA.canWrite) document.querySelectorAll('[data-v="case"], [data-v="upload"], #lNew').forEach(b => b.hidden = true);
+// The Ghana view only reads: entry and upload ask for a region first (support and national administrators pick
+// one here; the choice is saved for this sign-in, as on the start page).
+if (!DATA.canWrite) {
+  ['case', 'upload'].forEach(v => {
+    const view = $('#v-' + v), box = el('section', 'panel pickreg');
+    box.append(el('p', 'label', v === 'case' ? 'New case' : 'Upload'),
+      el('p', 'hl', v === 'case' ? 'Cases are entered for one region.' : 'A line list is uploaded for one region.'),
+      el('p', 'hint', 'You are looking at Ghana (all regions), which only reads. Choose the region the cases belong to: its districts and EPID codes are used, and you can come back to Ghana from the start page.'));
+    if (DATA.regions.length) {
+      const row = el('div', 'dlrow'), sel = el('select', 'in'), go = el('button', 'btn solid', v === 'case' ? 'Enter cases for this region' : 'Upload for this region');
+      options(sel, DATA.regions.map(n => [n, n + ' Region']), 'Choose a region…'); go.type = 'button';
+      go.addEventListener('click', async () => {
+        if (!sel.value) { toast('Choose a region.'); return; }
+        go.disabled = true;
+        try { await postJson('/api/region', { region: sel.value }); location.hash = v; location.reload(); }
+        catch (e) { toast(e.message); go.disabled = false; }
+      });
+      row.append(sel, go); box.append(row);
+    } else box.append(Object.assign(el('a', 'btn solid', 'Choose a region'), { href: '/start' }));
+    [...view.children].forEach(x => x.hidden = true);  // kept in the page (their buttons are wired below), not shown
+    view.prepend(box);
+  });
+  $('#lNew').textContent = 'New case (choose a region)';
+}
 
 /* ---------- sections ---------- */
 let current = null;
 function showView(v) {
-  if (!VIEWS[v] || (!DATA.canWrite && (v === 'case' || v === 'upload'))) v = 'dashboard';
+  if (!VIEWS[v]) v = 'dashboard';
   current = v;
   document.querySelectorAll('.view-tab').forEach(b => b.setAttribute('aria-selected', b.dataset.v === v));
   for (const k in VIEWS) $('#v-' + k).hidden = k !== v;
   $('#filters').hidden = !(v === 'dashboard' || v === 'reports');
   $('#title').textContent = v === 'case' && caseId ? 'Edit case' : VIEWS[v];
   if (location.hash.slice(1) !== v) history.replaceState(null, '', '#' + v);
-  ({ dashboard: loadDashboard, list: loadList, case: openCase, upload: () => {}, reports: loadReport, setup: renderSetup })[v]();
+  ({ dashboard: loadDashboard, list: loadList, case: DATA.canWrite ? openCase : () => {}, upload: () => {}, reports: loadReport, setup: renderSetup })[v]();
 }
 document.querySelector('.views').addEventListener('click', e => { const b = e.target.closest('.view-tab'); if (b) showView(b.dataset.v); });
 window.addEventListener('hashchange', () => { if (location.hash.slice(1) !== current) showView(location.hash.slice(1)); });
@@ -63,7 +86,7 @@ const F = { year: String(DATA.today.year), season: '1', from: '', to: '', distri
 function fillFilters() {
   options($('#fYear'), DATA.years.slice().reverse().map(y => [String(y), String(y)]));
   $('#fYear').value = F.year;
-  $('#fSeason').options[0].textContent = 'Season (from week ' + DATA.cfg.seasonStart + ' of the year before)';
+  $('#fSeason').options[0].textContent = 'Season (from wk ' + DATA.cfg.seasonStart + ', last year)';
   $('#fDistLabel').textContent = AREA;
   options($('#fDistrict'), DATA.districts.map(([, n]) => [n, n]), DATA.national ? 'All regions' : 'All districts');
 }
@@ -347,25 +370,40 @@ function mark(list, cls) {
     box.classList.add(cls === 'err' ? 'invalid' : 'warned'); box.append(el('p', cls, msg));
   });
 }
-async function saveCase() {
+const CARRY = ['district', 'health_facility', 'reporting_subdistrict', 'date_seen'];  // kept for "Save and add another"
+async function saveCase(next = false) {
   const missing = REQUIRED.filter(n => !input(n).value);
   document.querySelectorAll('#caseForm .err,#caseForm .warn').forEach(x => x.remove());
   document.querySelectorAll('#caseForm .field').forEach(f => f.classList.remove('invalid', 'warned'));
   if (missing.length) { mark(missing.map(n => ({ field: n, msg: 'Required.' })), 'err'); input(missing[0]).focus(); toast('Fill in the required fields.'); return; }
   const btn = $('#cSave'); btn.disabled = true;
   try {
-    const r = await postJson('/api/men/case/save', { id: caseId, fields: formValues() });
+    const values = formValues();
+    const r = await postJson('/api/men/case/save', { id: caseId, fields: values });
     const wasNew = !caseId;
+    refreshData();
+    if (next) {
+      caseId = null; loadedFor = undefined;
+      await openCase();
+      input('district').value = values.district;
+      input('district').dispatchEvent(new Event('change'));
+      CARRY.forEach(n => { input(n).value = values[n]; });
+      input('date_seen').dispatchEvent(new Event('change'));
+      dependencies();
+      window.scrollTo({ top: 0, behavior: 'smooth' }); input('last_name').focus({ preventScroll: true });
+      toast((wasNew ? 'Added ' : 'Saved ') + r.epid + ' · next case' + (r.warnings.length ? ' (it had ' + plural(r.warnings.length, 'note') + ': open it from the line list)' : ''));
+      return;
+    }
     caseId = r.id; loadedFor = undefined;
     await openCase();
     mark(r.warnings, 'warn');
     toast((wasNew ? 'Added ' : 'Saved ') + r.epid + (r.warnings.length ? ' · check the notes in yellow' : ''));
-    refreshData();
   } catch (e) {
     if (e.body && e.body.errors) { mark(e.body.errors, 'err'); const first = document.querySelector('#caseForm .invalid'); if (first) first.scrollIntoView({ block: 'center' }); }
     toast(e.message);
   } finally { btn.disabled = false; }
 }
+$('#cSaveNext').addEventListener('click', () => saveCase(true));
 $('#cReset').addEventListener('click', () => { caseId = null; loadedFor = undefined; openCase(); history.replaceState(null, '', '#case'); });
 $('#cDelete').addEventListener('click', async () => {
   if (!caseId || !confirm('Delete ' + $('#cEpid').textContent + ' from the line list? This cannot be undone.')) return;
