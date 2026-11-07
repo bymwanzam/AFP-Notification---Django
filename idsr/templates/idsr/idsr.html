@@ -1,0 +1,352 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Weekly IDSR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="{% static 'core/css/base.css' %}">
+<link rel="stylesheet" href="{% static 'idsr/css/idsr.css' %}">
+<style id="bulletinCss">
+/* The bulletin is the exported document: fixed A4 width, fixed colours in both themes, styled after the regional PDF. */
+.bulletin { display: grid; gap: 22px; justify-content: center; }
+.bpage, .bpage * { box-sizing: border-box; }
+.bpage [hidden] { display: none !important; }
+.bpage { position: relative; width: 794px; min-height: 1123px; padding: 28px 30px 58px; background: var(--paper, #92d050); color: #000; font-family: "Times New Roman", Times, serif; font-size: 14px; line-height: 1.25; box-shadow: 0 10px 30px rgba(20, 26, 36, .18); display: flex; flex-direction: column; gap: 12px; }
+.bpage p, .bpage h2, .bpage h3, .bpage ul, .bpage ol, .bpage figure { margin: 0; }
+.bhead { display: grid; grid-template-columns: 92px 1fr 92px; align-items: center; gap: 12px; padding-bottom: 8px; border-bottom: 2px solid #c9a227; }
+.blogo { width: 92px; height: 100px; object-fit: contain; background: #fff; border: 1px solid #a9a9a9; padding: 4px; display: block; }
+.btitle { text-align: center; }
+.btitle h2 { font-size: 25px; font-weight: 700; letter-spacing: .02em; color: #1f3864; white-space: nowrap; }
+.bt2 { font-size: 19px; font-weight: 700; color: #1e6b3d; margin-top: 6px !important; }
+.bt3 { font-size: 16px; font-weight: 700; color: #6f6f52; margin-top: 4px !important; }
+.bband { display: flex; gap: 10px; padding: 7px 8px; background: #1f3864; }
+.bband > span { flex: 1 1 auto; padding: 5px 8px; font-weight: 700; font-size: 13.5px; text-align: center; border: 2px solid #fff; display: flex; flex-wrap: wrap; gap: 0 10px; align-items: center; justify-content: center; }
+.bband span span { white-space: nowrap; }
+.bband .r { background: #e00000; color: #fff; }
+.bband .y { background: #ffff00; color: #000; font-family: Arial, Helvetica, sans-serif; font-size: 13px; }
+.bband .g { background: #00b050; color: #fff; }
+.brow { display: grid; grid-template-columns: 1fr 1.06fr; gap: 12px; align-items: start; }
+.bhigh { background: #ddebf7; border-left: 5px solid #1f7a7a; padding: 10px 12px 12px; }
+.bhigh h3 { font-size: 15px; color: #1f3864; letter-spacing: .02em; padding-bottom: 4px; border-bottom: 2px solid #c00000; margin-bottom: 6px !important; }
+.bhigh ul { padding-left: 18px; list-style: square; }
+.bhigh li { margin: 2px 0; }
+.bhigh li::marker { color: #1f7a7a; }
+.bcap { font-size: 15px; color: #1f3864; font-weight: 700; margin-bottom: 4px !important; }
+.btab { width: 100%; border-collapse: collapse; background: #fff; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.btab th { background: #e00000; color: #fff; font-weight: 700; padding: 4px 3px; border: 1px solid #fff; text-align: center; line-height: 1.1; }
+.btab td { padding: 3px 4px; text-align: center; border: 1px solid #d0d7e5; }
+.btab td.k { font-weight: 700; }
+.btab tbody tr:nth-child(odd) td { background: #eef2f8; }
+.btab.green tbody tr:nth-child(odd) td { background: #92d050; }
+.btab.green tbody tr:nth-child(even) td { background: #fff; }
+.btab tr.total td { font-weight: 700; background: #e6ebf3 !important; }
+.btab .red { color: #e00000; }
+.bsec { display: grid; }
+.bbar { background: #e00000; color: #fff; font-weight: 700; text-align: center; letter-spacing: .06em; font-size: 15px; padding: 4px 8px; text-transform: uppercase; }
+.bnote { font-size: 10.5px; font-style: italic; color: #2f4f1f; text-align: center; margin-top: 3px !important; }
+.btrack td.rem { text-align: left; font-weight: 700; color: #1f6f6f; }
+.btrack td.rem.pend { color: #8a4b00; }
+.btrack td.rem.late { color: #c00000; }
+.bempty { background: #fff; padding: 10px; text-align: center; font-style: italic; color: #555; }
+.bactions { padding-left: 24px; font-size: 15px; }
+.bactions li { margin: 3px 0; }
+.bactions li::marker { font-weight: 700; color: #1f3864; }
+.bfig { display: grid; gap: 4px; }
+.bfig figcaption { text-align: center; font-weight: 700; color: #1f3864; font-size: 15px; border-bottom: 1px solid #c9a227; padding-bottom: 3px; }
+.bfig img { width: 100%; max-height: 340px; object-fit: contain; background: #fff; display: block; }
+.bsrc { font-size: 10.5px; font-style: italic; text-align: center; color: #2f4f1f; }
+.bboard td { text-align: left; font-weight: 700; }
+.bboard td.role { font-weight: 400; }
+.bboard td.comp { font-style: italic; color: #6f6f6f; font-weight: 400; }
+.bfoot { position: absolute; left: 30px; right: 30px; bottom: 14px; text-align: center; font-family: Calibri, Arial, Helvetica, sans-serif; font-size: 10.5px; color: #3d5a1e; line-height: 1.4; }
+.bfoot b { color: #c00000; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="modules" aria-label="Modules">
+    <a href="AFP Watch Out.html" data-m="afp">AFP 60-day follow-up</a>
+    <a href="Weekly IDSR.html" data-m="idsr" aria-current="page">Weekly IDSR</a>
+    <a href="/meningitis" data-m="men">Meningitis</a>
+    <a class="region-link" href="/start" data-m="start" hidden><span id="navRegion"></span> · <b>Change</b></a>
+    <a class="adminlink" href="/admin" data-m="admin" hidden>Accounts</a>
+    <a class="signout" href="/profile" data-m="profile" hidden>Profile</a>
+    <a class="signout" href="/logout" data-m="logout" hidden>Sign out</a>
+  </nav>
+  <header>
+    <div class="brand">
+      <span class="brand-logo"><img src="{{ logo }}" alt="{{ logo_alt }}"></span>
+      <h1><span class="slug">WEEKLY IDSR · <span id="regionSlug"></span></span><span id="title">Weekly bulletin</span></h1>
+    </div>
+    <div class="status"><span><span class="dot" id="dot"></span><span id="statusText"></span></span></div>
+  </header>
+
+  <nav class="views" role="tablist" aria-label="Sections">
+    <button class="view-tab" role="tab" data-v="entry" aria-selected="false" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg><span>Data entry</span></button>
+    <button class="view-tab" role="tab" data-v="upload" aria-selected="false" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg><span>Upload Excel/CSV</span></button>
+    <button class="view-tab" role="tab" data-v="dhims2" aria-selected="false" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 16.6A5 5 0 0 0 18 7h-1.3A8 8 0 1 0 4 15.3"/><path d="M12 12v9"/><path d="M8 17l4 4 4-4"/></svg><span>Fetch data from DHIMS2</span></button>
+    <button class="view-tab" role="tab" data-v="report" aria-selected="true" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></svg><span>Report</span></button>
+  </nav>
+
+  <section class="panel orgbar" aria-label="Org unit">
+    <div class="org-row">
+      <div class="org-region"><span class="label">Org unit · Region</span><b id="orgRegion"></b><a class="btn" id="orgChange" href="/start" hidden>Change region</a></div>
+      <div class="org-dists"><span class="label" id="orgDistLabel">Districts</span><div class="dchips" id="orgDists"></div></div>
+    </div>
+    <p class="hint" id="orgNote" hidden></p>
+  </section>
+
+  <!-- DATA ENTRY -->
+  <div class="view" id="v-entry" hidden>
+    <section class="panel offline" hidden></section>
+    <div class="view" id="entryBody" hidden>
+      <div class="hero" aria-live="polite">
+        <div class="hero-top"><span class="hero-label">Reporting week</span><span class="hero-badge" id="wkBadge">New week</span></div>
+        <p class="hero-big" id="wkBig"></p>
+        <p class="hero-sub" id="wkSub"></p>
+        <div class="hstats">
+          <div class="hstat"><span>Completeness</span><b id="hsComp">–</b><i id="hsCompBar"></i></div>
+          <div class="hstat"><span>Timeliness</span><b id="hsTime">–</b><i id="hsTimeBar"></i></div>
+          <div class="hstat"><span>Suspected cases</span><b id="hsCases">0</b></div>
+          <div class="hstat"><span>Deaths</span><b id="hsDeaths">0</b></div>
+        </div>
+        <div class="hero-chips" id="wkChips"></div>
+      </div>
+
+      <form id="weekForm" class="steps" novalidate autocomplete="off">
+        <section class="step" id="stepWeek">
+          <div class="step-head"><span class="step-num">1</span><h2>Reporting week</h2><p>Pick the epi week. A week already on file opens for editing.</p></div>
+          <div class="grid three">
+            <div class="field"><div class="fhead"><label for="fYear">Year</label></div><input class="in mono" id="fYear" type="number" min="2000" max="2100" inputmode="numeric"></div>
+            <div class="field"><div class="fhead"><label for="fWeek">Epi week</label></div>
+              <div class="wk"><button type="button" id="wkPrev" aria-label="Previous week">‹</button><input class="in" id="fWeek" type="number" min="1" max="53" inputmode="numeric"><button type="button" id="wkNext" aria-label="Next week">›</button></div></div>
+            <div class="field"><div class="fhead"><label for="fPublished">Bulletin date (Thu after)</label><span class="auto">auto</span></div><input class="in" id="fPublished" type="date" data-k="published" readonly></div>
+            <div class="field"><div class="fhead"><label for="fStart">Week beginning (Mon)</label><span class="auto">auto</span></div><input class="in" id="fStart" type="date" data-k="start" readonly></div>
+            <div class="field"><div class="fhead"><label for="fEnd">Week ending (Sun)</label><span class="auto">auto</span></div><input class="in" id="fEnd" type="date" data-k="end" readonly></div>
+            <div class="field"></div>
+            <div class="field"><div class="fhead"><label for="fExpected">Reports expected</label></div><input class="in mono" id="fExpected" type="number" min="0" inputmode="numeric" data-k="expected"></div>
+            <div class="field"><div class="fhead"><label for="fReceived">Reports received</label></div><input class="in mono" id="fReceived" type="number" min="0" inputmode="numeric" data-k="received"></div>
+            <div class="field"><div class="fhead"><label for="fOntime">Received on time</label></div><input class="in mono" id="fOntime" type="number" min="0" inputmode="numeric" data-k="ontime"></div>
+          </div>
+        </section>
+
+        <section class="step" id="stepCounts">
+          <div class="step-head"><span class="step-num">2</span><h2>Cases by district</h2><p>Copy the numbers from the weekly form. A blank cell counts as zero.</p></div>
+          <div class="keys"><span><b>CS</b> suspected cases</span><span><b>D</b> deaths</span><span><b>LC</b> lab confirmed</span><span><b>Enter</b> / <b>↑ ↓</b> move down and up a column</span></div>
+          <div id="grids" class="steps"></div>
+        </section>
+
+        <section class="step" id="stepNotes">
+          <div class="step-head"><span class="step-num">3</span><h2>Analysis and action</h2><p>Goes on the form and into the bulletin. One point per line.</p></div>
+          <div class="grid">
+            <div class="field wide"><div class="fhead"><label for="fEpi">Epidemiological summary</label><button class="btn textbtn" type="button" id="epiGen">Write from the counts</button></div><textarea class="in" id="fEpi" data-k="epi"></textarea></div>
+            <div class="field wide"><div class="fhead"><label for="fComments">Comments</label></div><textarea class="in" id="fComments" data-k="comments"></textarea></div>
+            <div class="field"><div class="fhead"><label for="fDecisions">Decisions and actions taken</label></div><textarea class="in" id="fDecisions" data-k="decisions"></textarea></div>
+            <div class="field"><div class="fhead"><label for="fRecs">Recommendations</label></div><textarea class="in" id="fRecs" data-k="recommendations"></textarea></div>
+            <div class="field wide"><div class="fhead"><label for="fHigh">Extra bulletin highlights</label></div><textarea class="in" id="fHigh" data-k="highlights" placeholder="e.g. 11 samples of ILI transported to Accra"></textarea></div>
+          </div>
+        </section>
+
+        <section class="step" id="stepOfficer">
+          <div class="step-head"><span class="step-num">4</span><h2>Reporting officer</h2><p>Who filled and sent the form.</p></div>
+          <div class="grid">
+            <div class="field"><div class="fhead"><label for="fReporter">Name of person reporting</label></div><input class="in" id="fReporter" data-k="reporter" maxlength="120"></div>
+            <div class="field"><div class="fhead"><label for="fPhone">Telephone</label></div><input class="in mono" id="fPhone" data-k="phone" inputmode="tel" maxlength="30"></div>
+            <div class="field"><div class="fhead"><label for="fFilled">Date form filled</label></div><input class="in" id="fFilled" type="date" data-k="filled"></div>
+            <div class="field"><div class="fhead"><label for="fSubmitted">Date submitted</label></div><input class="in" id="fSubmitted" type="date" data-k="submitted"></div>
+          </div>
+        </section>
+      </form>
+      <div class="savebar">
+        <div class="progress"><span class="label" id="progText"></span><span class="meter"><i id="progFill"></i></span></div>
+        <button class="btn danger" type="button" id="delWeekBtn" hidden>Delete week</button>
+        <button class="btn" type="button" id="resetBtn">Undo changes</button>
+        <button class="btn solid big" type="submit" form="weekForm" id="saveBtn">Save week</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- UPLOAD -->
+  <div class="view" id="v-upload" hidden>
+    <section class="panel offline" hidden></section>
+    <div class="view" id="uploadBody" hidden>
+      <section class="panel">
+        <p class="label">Add or update weeks from a file</p>
+        <p class="hint">Upload a filled-in <b>IDSR Summary Regional Weekly Reporting Form</b> (.xlsx; every sheet that is a form is read), or a table with Year, Week and District columns and one column per disease and measure, such as “AFP CS” or “Measles D”, as .xlsx or .csv. Weeks are matched by year and week number and districts by name or code. Blank cells never erase anything. You review every change before it is saved.</p>
+        <input type="file" id="fileInput" accept=".xlsx,.xlsm,.csv" hidden>
+        <button class="drop" id="drop" type="button">
+          <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M28 6H14a4 4 0 0 0-4 4v28a4 4 0 0 0 4 4h20a4 4 0 0 0 4-4V16z"/><path d="M28 6v10h10"/><path d="M24 34V22M19 27l5-5 5 5"/></svg>
+          <strong>Drop the weekly form or a CSV here</strong>
+          <span>or click to choose one · .xlsx or .csv, up to 10 MB</span>
+        </button>
+      </section>
+      <section class="panel" id="plan" hidden aria-live="polite">
+        <div class="toolbar"><p class="label" data-p="label"></p><span class="note" data-p="note"></span></div>
+        <div class="tally" data-p="tally"></div>
+        <div data-p="body"></div>
+        <div class="toolbar">
+          <span class="note" data-p="warn"></span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" id="planCancel">Cancel</button><button class="btn solid" type="button" id="planApply" data-p="apply">Apply changes</button></div>
+        </div>
+      </section>
+      <section class="panel">
+        <p class="label">Downloads</p>
+        <p class="hint">Get a week as the official form or as a table to fill in, or every week on file.</p>
+        <div class="dl-row">
+          <label><span class="label">Week</span><select class="in" id="dlWeek"></select></label>
+          <a class="btn" id="dlForm" download>Weekly form (.xlsx)</a>
+          <a class="btn" id="dlCsv" download>Table (.csv)</a>
+          <a class="btn solid" id="dlAll" download>All weeks (.xlsx)</a>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- FETCH DATA FROM DHIMS2 -->
+  <div class="view" id="v-dhims2" hidden>
+    <section class="panel offline" hidden></section>
+    <div class="steps" id="dBody" hidden>
+      <section class="step" id="dConnStep">
+        <div class="step-head"><span class="step-num">1</span><h2>Connect to DHIMS2</h2><p>Sign in with a personal access token from your DHIMS2 account.</p></div>
+        <div class="grid">
+          <div class="field wide"><div class="fhead"><label for="dUrl">DHIMS2 address</label></div><input class="in mono" id="dUrl" type="url" spellcheck="false" autocomplete="off"></div>
+          <div class="field wide"><div class="fhead"><label for="dToken">Personal access token</label></div><input class="in mono" id="dToken" type="password" spellcheck="false" autocomplete="off" placeholder="d2pat_…"></div>
+          <label class="check d-wide"><input type="checkbox" id="dRemember"><span>Remember the token on this computer. It is saved in your Windows profile (<code id="dCfgFile"></code>), not in the project folder. Leave this off on a shared computer.</span></label>
+        </div>
+        <div class="d-row"><button class="btn solid" type="button" id="dConnect">Connect</button><button class="btn" type="button" id="dForget" hidden>Forget token</button><span class="note" id="dWho"></span></div>
+        <details class="d-help"><summary>How to get a token</summary>
+          <ol>
+            <li>Sign in to DHIMS2 in your browser.</li>
+            <li>Open your profile (top right), then <b>Edit profile</b> and <b>Personal access tokens</b>.</li>
+            <li>Choose <b>Generate new token</b>, then <b>Server/script context</b>. Set an expiry date (for example 90 days). You can limit it to GET requests.</li>
+            <li>Copy the token (it starts with <code>d2pat_</code>, and DHIMS2 shows it only once) and paste it above.</li>
+          </ol>
+          <p class="hint">The token reads whatever your DHIMS2 account can read, and is sent only to the DHIMS2 address above. If your DHIMS2 has no Personal access tokens page, ask the DHIMS2 administrators.</p>
+        </details>
+      </section>
+      <section class="step" id="dSetStep" hidden>
+        <div class="step-head"><span class="step-num">2</span><h2>Data set and columns</h2><p>Which DHIMS2 data element fills each IDSR column. They are suggested from the names: check them once and save.</p></div>
+        <div class="field"><div class="fhead"><label for="dSet">DHIMS2 data set</label><span class="hint" id="dSetHint"></span></div><select class="in" id="dSet"></select></div>
+        <div class="dmap-wrap" id="dMap" hidden></div>
+        <div class="d-row"><button class="btn" type="button" id="dSaveMap" hidden>Save column matches</button><span class="note" id="dMapNote"></span></div>
+      </section>
+      <section class="step" id="dFetchStep" hidden>
+        <div class="step-head"><span class="step-num">3</span><h2>Weeks to fetch</h2><p>DHIMS2 figures are summed by district for each epi week. You review every change before it is saved to the IDSR report.</p></div>
+        <div class="grid three">
+          <div class="field"><div class="fhead"><label for="dYear">Year</label></div><input class="in mono" id="dYear" type="number" min="2000" max="2100" inputmode="numeric"></div>
+          <div class="field"><div class="fhead"><label for="dFrom">From epi week</label></div><input class="in mono" id="dFrom" type="number" min="1" max="53" inputmode="numeric"></div>
+          <div class="field"><div class="fhead"><label for="dTo">To epi week</label></div><input class="in mono" id="dTo" type="number" min="1" max="53" inputmode="numeric"></div>
+        </div>
+        <div class="d-row"><button class="btn" type="button" data-span="1">Last week</button><button class="btn" type="button" data-span="4">Last 4 weeks</button><button class="btn" type="button" data-span="ytd">Year to date</button></div>
+        <div class="d-row"><button class="btn solid" type="button" id="dFetch">Fetch and review</button><span class="note">DHIMS2 serves these figures from its analytics tables, which are usually updated overnight: data entered today may only show tomorrow.</span></div>
+        <p class="d-err" id="dErr" role="alert"></p>
+      </section>
+      <section class="panel" id="dPlan" hidden aria-live="polite">
+        <div class="toolbar"><p class="label" data-p="label"></p><span class="note" data-p="note"></span></div>
+        <div class="tally" data-p="tally"></div>
+        <div data-p="body"></div>
+        <div class="toolbar">
+          <span class="note" data-p="warn"></span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" id="dCancel">Cancel</button><button class="btn solid" type="button" id="dApply" data-p="apply">Save to IDSR report</button></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- REPORT -->
+  <div class="view" id="v-report" hidden>
+    <section class="panel">
+      <div class="toolbar"><p class="label">Bulletin</p><span class="note" id="repNote"></span></div>
+      <div class="rep-filters">
+        <label><span class="label">Year</span><select class="in" id="repYear"></select></label>
+        <label><span class="label">Epi week</span><select class="in" id="repWeek"></select></label>
+        <label class="check" style="align-self:end;padding-bottom:10px"><input type="checkbox" id="repAfp" checked><span>AFP 60-day tracker</span></label>
+      </div>
+      <div class="rep-style">
+        <div class="paper" id="repPaper" role="group" aria-labelledby="repPaperLabel">
+          <span class="label" id="repPaperLabel">Background colour</span>
+          <span class="swatches"></span>
+          <label class="swatch-custom"><input type="color" aria-label="Custom background colour"><span>Custom</span></label>
+          <span class="paper-note"></span>
+        </div>
+        <label class="pubdate"><span class="label">Publication date</span><input class="in" id="repPub" type="date" title="Defaults to the Thursday after the week; clear it to go back to that"></label>
+      </div>
+      <div class="exports">
+        <span class="label">Export</span>
+        <button class="btn" type="button" id="expPng">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>Image (PNG)</button>
+        <button class="btn solid" type="button" id="expPdf">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 15h6"/></svg>PDF</button>
+      </div>
+    </section>
+    <details class="panel" id="setPanel" hidden>
+      <summary><span class="label">Bulletin details: district codes, editorial board, pictures</span></summary>
+      <div class="grid">
+        <div class="field"><div class="fhead"><label for="sRegion">Region</label><span class="auto">org unit</span></div><input class="in" id="sRegion" readonly></div>
+        <div class="field"><div class="fhead"><label for="sCode">Region code</label></div><input class="in mono" id="sCode" maxlength="8" placeholder="NER"></div>
+        <div class="field wide"><div class="fhead"><label for="sDistricts">Districts, in report order: code then name</label><span class="hint"><span id="sDistHint"></span> · <button class="btn textbtn" type="button" id="sReset">Reset to org unit list</button></span></div><textarea class="in mono" id="sDistricts" rows="8"></textarea></div>
+        <div class="field wide"><div class="fhead"><label for="sBoard">Editorial board: Name – Role</label></div><textarea class="in" id="sBoard" rows="5"></textarea></div>
+        <div class="field wide"><div class="fhead"><label for="sActions">Standard public health actions (used when a week has no decisions or recommendations)</label></div><textarea class="in" id="sActions" rows="6"></textarea></div>
+      </div>
+      <div class="pics">
+        <div class="pic" data-slot="map"><span class="label">Region map</span><img alt="" hidden><div class="row"><button class="btn" type="button" data-act="pick">Choose picture</button><button class="btn" type="button" data-act="remove">Remove</button></div></div>
+        <div class="pic" data-slot="sormas"><span class="label">SORMAS dashboard screenshot</span><img alt="" hidden><div class="row"><button class="btn" type="button" data-act="pick">Choose picture</button><button class="btn" type="button" data-act="remove">Remove</button></div></div>
+      </div>
+      <input type="file" id="picInput" accept="image/png,image/jpeg" hidden>
+      <div><button class="btn solid" type="button" id="setSave">Save details</button></div>
+    </details>
+    <div class="sheet-scroll">
+      <article class="bulletin" id="bulletin" aria-label="Weekly epidemiological bulletin">
+        <div class="bpage" id="bp1">
+          <div class="bhead">
+            <img class="blogo" src="{{ emblem }}" alt="Ghana Health Service">
+            <div class="btitle"><h2>WEEKLY EPIDEMIOLOGICAL BULLETIN</h2><p class="bt2" id="bSub"></p><p class="bt3">Public Health Emergency Surveillance &amp; Response</p></div>
+            <img class="blogo" id="bRhd" src="{{ rhd }}" alt="RHD Upper East Surveillance">
+          </div>
+          <div class="bband"><span class="r" id="bNo"></span><span class="y" id="bPub"></span><span class="g" id="bWeeks"></span></div>
+          <div class="brow">
+            <section class="bhigh"><h3>HIGHLIGHTS OF THE WEEK UNDER REVIEW</h3><ul id="bHigh"></ul></section>
+            <section><p class="bcap" id="bCap1"></p><table class="btab" id="bTab1"></table></section>
+          </div>
+          <section class="bsec"><div class="bbar" id="bBar2"></div><table class="btab green" id="bTab2"></table><p class="bnote" id="bNote2"></p></section>
+          <section class="bsec" id="bAfp"><div class="bbar" id="bBarAfp"></div><table class="btab green btrack" id="bTabAfp"></table></section>
+          <footer class="bfoot" data-page="1"></footer>
+        </div>
+        <div class="bpage" id="bp2">
+          <section class="bsec"><div class="bbar">Public health action undertaken and required</div></section>
+          <ol class="bactions" id="bActions"></ol>
+          <figure class="bfig" id="bMap"><figcaption id="bMapCap"></figcaption><img alt="Map of the region's municipalities and districts"><p class="bsrc" id="bMapSrc"></p></figure>
+          <figure class="bfig" id="bSormas"><figcaption>SORMAS Surveillance Dashboard – Regional Situation View</figcaption><img alt="SORMAS regional situation view"><p class="bsrc">Source: SORMAS (Surveillance, Outbreak Response Management and Analysis System) – regional extract</p></figure>
+          <section class="bsec"><div class="bbar">Editorial board</div><table class="btab bboard" id="bBoard"></table></section>
+          <footer class="bfoot" data-page="2"></footer>
+        </div>
+      </article>
+    </div>
+  </div>
+
+  <footer class="site-foot">
+    <span>© <span class="year"></span> {{ org }}. All rights reserved.</span>
+    <span class="support">
+      <span>Support</span>
+      <a href="{{ support.wa_link }}" target="_blank" rel="noopener" aria-label="WhatsApp support {{ support.wa_number }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21l1.65-3.8A9 9 0 1 1 8.4 20.4z"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"/></svg>WhatsApp {{ support.wa_number }}</a>
+      <a href="mailto:{{ support.email }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>{{ support.email }}</a>
+    </span>
+  </footer>
+</div>
+<div class="toast" id="toast" hidden role="status"></div>
+
+{{ data|json_script:"page-data" }}
+<script src="{% static 'core/js/csrf.js' %}"></script>
+<script src="{% static 'core/js/paper.js' %}"></script>
+<script src="{% static 'idsr/js/idsr.js' %}"></script>
+</body>
+</html>

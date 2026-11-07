@@ -1,0 +1,206 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AFP Watch Out</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="{% static 'core/css/base.css' %}">
+</head>
+<body>
+<div class="wrap">
+  <nav class="modules" aria-label="Modules">
+    <a href="AFP Watch Out.html" data-m="afp" aria-current="page">AFP 60-day follow-up</a>
+    <a href="Weekly IDSR.html" data-m="idsr">Weekly IDSR</a>
+    <a href="/meningitis" data-m="men">Meningitis</a>
+    <a class="region-link" href="/start" data-m="start" hidden>{{ region_up }} · <b>Change</b></a>
+    <a class="adminlink" href="/admin" data-m="admin" hidden>Accounts</a>
+    <a class="signout" href="/profile" data-m="profile" hidden>Profile</a>
+    <a class="signout" href="/logout" data-m="logout" hidden>Sign out</a>
+  </nav>
+  <header>
+    <div class="brand">
+      <span class="brand-logo"><img src="{{ logo }}" alt="{{ logo_alt }}"></span>
+      <h1><span class="slug">AFP · 60-DAY WATCH OUT · {{ region_up }}</span><span id="title">Follow-up alerts</span></h1>
+    </div>
+    <div class="status"><span><span class="dot" id="dot"></span><span id="statusText"></span></span></div>
+  </header>
+
+  <nav class="views" role="tablist" aria-label="Sections">
+    <button class="view-tab" role="tab" data-v="alerts" aria-selected="true" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span>Alerts</span></button>
+    <button class="view-tab" role="tab" data-v="entry" aria-selected="false" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg><span>New case</span></button>
+    <button class="view-tab" role="tab" data-v="upload" aria-selected="false" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg><span>Update from file</span></button>
+    <button class="view-tab" role="tab" data-v="report" aria-selected="false" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></svg><span>Report</span></button>
+  </nav>
+
+  <!-- ALERTS -->
+  <div class="view" id="v-alerts">
+    <div class="tally" id="tally">
+      <button class="stat past" data-f="past" type="button"><b id="tPast">0</b><span>Past due</span></button>
+      <button class="stat soon" data-f="soon" type="button"><b id="tSoon">0</b><span>Due in 7 days</span></button>
+      <button class="stat report" data-f="report" type="button"><b id="tReport">0</b><span>Report pending</span></button>
+      <button class="stat closed" data-f="closed" type="button"><b id="tClosed">0</b><span>Closed</span></button>
+    </div>
+
+    <section class="panel" aria-labelledby="watchLabel">
+      <div class="toolbar">
+        <p class="label" id="watchLabel">District watchlist</p>
+        <span class="note" id="watchNote"></span>
+      </div>
+      <div class="chips" id="chips"></div>
+      <p class="hint">Pin the districts or municipalities you supervise. Their cases get flagged in the feed and collected under the Watchlist tab.</p>
+      <form class="add" id="addForm">
+        <label for="districtInput" class="label" style="flex-basis:100%">Add a district</label>
+        <input type="text" id="districtInput" list="districtList" placeholder="Type or pick a district" autocomplete="off" maxlength="60">
+        <datalist id="districtList"></datalist>
+        <button class="btn solid" type="submit">Add</button>
+      </form>
+    </section>
+
+    <section aria-label="Cases">
+      <div class="tabs" role="tablist" id="tabs">
+        <button class="tab" role="tab" data-f="action" aria-selected="true">Needs action<span class="n" id="nAction">0</span></button>
+        <button class="tab" role="tab" data-f="past" aria-selected="false">Past due<span class="n" id="nPast">0</span></button>
+        <button class="tab" role="tab" data-f="soon" aria-selected="false">Due soon<span class="n" id="nSoon">0</span></button>
+        <button class="tab" role="tab" data-f="report" aria-selected="false">Report pending<span class="n" id="nReport">0</span></button>
+        <button class="tab" role="tab" data-f="watch" aria-selected="false">Watchlist<span class="n" id="nWatch">0</span></button>
+        <button class="tab" role="tab" data-f="all" aria-selected="false">All cases<span class="n" id="nAll">0</span></button>
+      </div>
+      <div class="feedbar">
+        <input type="search" id="search" placeholder="Search name, EPID #, district or region" aria-label="Search cases">
+        <button class="btn" id="seenAll" type="button">Mark all seen</button>
+        <button class="btn solid" id="reload" type="button" title="Read the register again">Reload</button>
+      </div>
+      <ol class="feed" id="feed"></ol>
+      <div class="empty" id="empty" hidden><strong></strong><span></span></div>
+    </section>
+    <p class="note" id="footNote"></p>
+  </div>
+
+  <!-- NEW CASE -->
+  <div class="view" id="v-entry" hidden>
+    <section class="panel offline" hidden></section>
+    <div class="empty" id="entryLoading" hidden><strong>Loading the register…</strong><span>Reading the columns and lists from the workbook.</span></div>
+    <div class="view" id="entryBody" hidden>
+      <div class="hero" aria-live="polite">
+        <div class="hero-top"><span class="hero-label">60-day follow-up clock</span><span class="hero-badge" id="tlBadge">Not started</span></div>
+        <p class="hero-big" id="tlBig">Enter the date of onset to start the clock</p>
+        <div>
+          <div class="track" aria-hidden="true"><span class="tick" style="left:88.3%"></span><i id="tlFill"></i><b id="tlMark"></b></div>
+          <div class="legend"><span id="tlStart">Onset</span><span id="tlEnd">Day 60 · follow-up visit</span></div>
+        </div>
+        <div class="hero-chips" id="tlChips"></div>
+      </div>
+      <div class="editbar" id="editBar" hidden><span id="editText"></span><span class="editacts"><button class="btn danger" type="button" id="editDelete">Delete case</button><button class="btn" type="button" id="editCancel">Cancel</button></span></div>
+      <form id="entryForm" class="steps" novalidate autocomplete="off"></form>
+      <div class="savebar">
+        <div class="progress"><span class="label" id="progText">0 of 0 required fields</span><span class="meter"><i id="progFill"></i></span></div>
+        <button class="btn" type="button" id="clearBtn">Clear</button>
+        <button class="btn solid big" type="submit" form="entryForm" id="saveBtn">Save case</button>
+      </div>
+    </div>
+    <section class="panel saved" id="saved" hidden aria-live="polite">
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="32" cy="32" r="25"/><path d="M21 33l7 7 15-16"/></svg>
+      <p class="label">Saved to the register</p>
+      <strong id="savedName"></strong>
+      <span class="hint" id="savedNote"></span>
+      <div class="actions"><button class="btn" type="button" id="viewSaved">See it in Alerts</button><button class="btn solid" type="button" id="addAnother">Add another case</button></div>
+    </section>
+  </div>
+
+  <!-- UPDATE FROM FILE -->
+  <div class="view" id="v-upload" hidden>
+    <section class="panel offline" hidden></section>
+    <div class="view" id="uploadBody" hidden>
+      <section class="panel">
+        <div class="toolbar">
+          <p class="label">Update existing cases</p>
+          <a class="btn" href="/api/register.xlsx" download="AFP cases for update.xlsx">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>Download current cases</a>
+        </div>
+        <p class="hint">Download the current cases, fill in follow-up outcomes, report dates or lab feedback, then upload the file. Rows are matched to the register by EPID #. Only cells that differ are changed, blank cells never erase anything, and the calculated columns are left to Excel. You review every change before it is saved.</p>
+        <input type="file" id="fileInput" accept=".xlsx,.xlsm,.csv" hidden>
+        <button class="drop" id="drop" type="button">
+          <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M28 6H14a4 4 0 0 0-4 4v28a4 4 0 0 0 4 4h20a4 4 0 0 0 4-4V16z"/><path d="M28 6v10h10"/><path d="M24 34V22M19 27l5-5 5 5"/></svg>
+          <strong>Drop an Excel or CSV file here</strong>
+          <span>or click to choose one · .xlsx or .csv, up to 10 MB</span>
+        </button>
+        <label class="check"><input type="checkbox" id="addNew"><span>Also add rows whose EPID # is not in the register yet, as new cases</span></label>
+      </section>
+      <section class="panel" id="plan" hidden aria-live="polite">
+        <div class="toolbar"><p class="label" id="planLabel"></p><span class="note" id="planNote"></span></div>
+        <div class="tally" id="planTally"></div>
+        <div id="planBody"></div>
+        <div class="toolbar">
+          <span class="note" id="planWarn"></span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" id="planCancel">Cancel</button><button class="btn solid" type="button" id="planApply">Apply changes</button></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- REPORT -->
+  <div class="view" id="v-report" hidden>
+    <section class="panel">
+      <div class="toolbar"><p class="label">Report settings</p><span class="note" id="repNote"></span></div>
+      <div class="rep-filters">
+        <label><span class="label">Year of onset</span><select class="in" id="repYear"></select></label>
+        <label><span class="label">From epi week</span><input class="in" type="number" id="repFrom" min="1" max="53" placeholder="1" inputmode="numeric"></label>
+        <label><span class="label">To epi week</span><input class="in" type="number" id="repTo" min="1" max="53" placeholder="53" inputmode="numeric"></label>
+      </div>
+      <div class="paper" id="repPaper" role="group" aria-labelledby="repPaperLabel">
+        <span class="label" id="repPaperLabel">Background colour</span>
+        <span class="swatches"></span>
+        <label class="swatch-custom"><input type="color" aria-label="Custom background colour"><span>Custom</span></label>
+        <span class="paper-note"></span>
+      </div>
+      <div class="exports">
+        <span class="label">Export</span>
+        <button class="btn" type="button" id="expPng">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>Image (PNG)</button>
+        <button class="btn" type="button" id="expPdf">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 15h6"/></svg>PDF</button>
+        <button class="btn solid" type="button" id="expXlsx">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>Excel</button>
+      </div>
+    </section>
+    <div class="sheet-scroll">
+      <article class="sheet" id="sheet" aria-labelledby="repTitle">
+        <img class="sheet-logo" id="repLogo" src="{{ logo }}" alt="{{ logo_alt }}">
+        <h2 id="repTitle"></h2>
+        <table class="rep">
+          <thead><tr><th>SN.</th><th id="repUnitHead">District/Municipality</th><th class="num">Number of cases detected</th><th class="num">60 day follow up reports received</th></tr></thead>
+          <tbody id="repBody"></tbody>
+          <tfoot><tr><td colspan="2" id="repTotalLabel">Regional total</td><td class="num" id="repCases"></td><td class="num" id="repReports"></td></tr></tfoot>
+        </table>
+        <p class="sheet-foot" id="repFoot"></p>
+        <p class="sheet-rights" id="repRights"></p>
+      </article>
+    </div>
+  </div>
+
+  <footer class="site-foot">
+    <span>© <span class="year"></span> {{ org }}. All rights reserved.</span>
+    <span class="support">
+      <span>Support</span>
+      <a href="{{ support.wa_link }}" target="_blank" rel="noopener" aria-label="WhatsApp support {{ support.wa_number }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21l1.65-3.8A9 9 0 1 1 8.4 20.4z"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"/></svg>WhatsApp {{ support.wa_number }}</a>
+      <a href="mailto:{{ support.email }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>{{ support.email }}</a>
+    </span>
+  </footer>
+</div>
+<div class="toast" id="toast" hidden role="status"></div>
+
+{{ data|json_script:"page-data" }}
+<script src="{% static 'core/js/csrf.js' %}"></script>
+<script src="{% static 'core/js/paper.js' %}"></script>
+<script src="{% static 'afp/js/dashboard.js' %}"></script>
+</body>
+</html>

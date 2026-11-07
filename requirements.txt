@@ -1,0 +1,5 @@
+Django>=5.2,<6.2
+openpyxl>=3.1
+whitenoise>=6.9
+pysqlite3-binary; sys_platform == "linux"   # a recent SQLite on hosts whose own is too old for Django
+# PyMySQL>=1.1   # only when DB_ENGINE=mysql (or mysqlclient>=2.2, if the server can build it)

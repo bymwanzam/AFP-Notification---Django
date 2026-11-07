@@ -1,0 +1,16 @@
+/* Profile: picture beside the details form. */
+.pgrid { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 28px; align-items: start; }
+.pic { display: grid; gap: 12px; justify-items: center; text-align: center; }
+.avatar { width: 168px; height: 168px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center;
+  font-family: var(--display); font-size: 3.6rem; font-weight: 700; overflow: hidden; border: 4px solid var(--surface); box-shadow: 0 0 0 1px var(--rule), var(--shadow); }
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+.pic .acts { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.btn.danger { border-color: var(--flash); color: var(--flash); }
+.btn.danger:hover:not(:disabled) { background: var(--flash-soft); }
+.form { display: grid; gap: 16px; }
+.form .field { display: grid; gap: 6px; }
+.ro { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.ro div { border: 1px solid var(--rule); border-radius: 9px; padding: 10px 12px; display: grid; gap: 2px; }
+.ro b { font-weight: 600; }
+.acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+@media (max-width: 640px) { .pgrid, .ro { grid-template-columns: 1fr; } }

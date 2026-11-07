@@ -1,0 +1,180 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Meningitis Line List</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="{% static 'core/css/base.css' %}">
+<link rel="stylesheet" href="{% static 'meningitis/css/meningitis.css' %}">
+</head>
+<body>
+<div class="wrap">
+  <nav class="modules" aria-label="Modules">
+    <a href="/" data-m="afp">AFP 60-day follow-up</a>
+    <a href="/idsr" data-m="idsr">Weekly IDSR</a>
+    <a href="/meningitis" data-m="men" aria-current="page">Meningitis</a>
+    <a class="region-link" href="/start" data-m="start"><span id="navRegion"></span> · <b>Change</b></a>
+    <a class="adminlink" href="/admin" data-m="admin" hidden>Accounts</a>
+    <a class="signout" href="/profile?next=/meningitis" data-m="profile">Profile</a>
+    <a class="signout" href="/logout" data-m="logout">Sign out</a>
+  </nav>
+  <header>
+    <div class="brand">
+      <span class="brand-logo"><img src="{{ logo }}" alt="{{ logo_alt }}"></span>
+      <h1><span class="slug">MENINGITIS · <span id="regionSlug"></span></span><span id="title">Dashboard</span></h1>
+    </div>
+    <div class="status"><span><span class="dot live"></span><span id="statusText"></span></span></div>
+  </header>
+
+  <nav class="views" role="tablist" aria-label="Sections">
+    <button class="view-tab" role="tab" data-v="dashboard" aria-selected="true" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg><span>Dashboard</span></button>
+    <button class="view-tab" role="tab" data-v="list" aria-selected="false" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Line list</span></button>
+    <button class="view-tab" role="tab" data-v="case" aria-selected="false" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span id="caseTabText">New case</span></button>
+    <button class="view-tab" role="tab" data-v="upload" aria-selected="false" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg><span>Upload</span></button>
+    <button class="view-tab" role="tab" data-v="reports" aria-selected="false" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></svg><span>Reports</span></button>
+    <button class="view-tab" role="tab" data-v="setup" aria-selected="false" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Sub-districts and thresholds</span></button>
+  </nav>
+
+  <p class="readonly-note panel" id="readOnly" hidden>The Ghana view shows every region's cases and reports, and changes nothing. To add or change cases, <a href="/start">pick a region</a>.</p>
+
+  <!-- Period and place: shared by the dashboard and the reports -->
+  <section class="panel filters" id="filters" hidden>
+    <div class="fbar">
+      <label><span class="label">Year</span><select class="in" id="fYear"></select></label>
+      <label><span class="label">Weeks</span><select class="in" id="fSeason"><option value="1">Season (from week 39 of the year before)</option><option value="0">Calendar year</option></select></label>
+      <label><span class="label">From week</span><input class="in mono" id="fFrom" type="number" min="1" max="53" inputmode="numeric"></label>
+      <label><span class="label">To week</span><input class="in mono" id="fTo" type="number" min="1" max="53" inputmode="numeric"></label>
+      <label><span class="label" id="fDistLabel">District</span><select class="in" id="fDistrict"></select></label>
+    </div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <div class="view" id="v-dashboard">
+    <div class="tally kpis" id="kpis"></div>
+    <section class="panel" id="dashAlerts"></section>
+    <section class="panel"><div class="toolbar"><p class="label">Epi curve: cases by epi week and final classification</p><span class="note" id="dashCurveNote"></span></div><div class="chart" id="dashCurve"></div></section>
+    <section class="panel"><div class="toolbar"><p class="label" id="dashAreaLabel">By district</p><span class="note" id="dashAsOf"></span></div><div class="tscroll"><table class="mtab" id="dashAreas"></table></div></section>
+  </div>
+
+  <!-- LINE LIST -->
+  <div class="view" id="v-list" hidden>
+    <section class="panel">
+      <div class="lbar">
+        <input type="search" id="lQ" placeholder="Search EPID, name, facility, community" aria-label="Search the line list">
+        <select class="in" id="lDistrict" aria-label="District"></select>
+        <select class="in" id="lClass" aria-label="Final classification"></select>
+        <select class="in" id="lOutcome" aria-label="Outcome"></select>
+        <select class="in" id="lYear" aria-label="Year"></select>
+      </div>
+      <div class="toolbar">
+        <div class="seg" role="group" aria-label="Where patients live" id="lOther">
+          <button type="button" data-o="0" aria-pressed="true">Living in the region</button>
+          <button type="button" data-o="1" aria-pressed="false">Living in other regions <span id="lOtherN"></span></button>
+          <button type="button" data-o="" aria-pressed="false">All</button>
+        </div>
+        <div class="dlrow"><a class="btn" id="dlNoNames" download>Download without names</a><a class="btn" id="dlNames" download>Download with names</a><button class="btn solid" type="button" id="lNew">New case</button></div>
+      </div>
+    </section>
+    <section class="panel">
+      <div class="toolbar"><p class="label" id="lCount"></p><span class="note">Click a case to open it.</span></div>
+      <div class="tscroll"><table class="mtab list" id="lTable"></table></div>
+      <div class="pager" id="lPager"></div>
+    </section>
+  </div>
+
+  <!-- CASE FORM -->
+  <div class="view" id="v-case" hidden>
+    <div class="hero" aria-live="polite">
+      <div class="hero-top"><span class="hero-label" id="cMode">New case</span><span class="hero-badge" id="cBadge"></span></div>
+      <p class="hero-big mono" id="cEpid">GHA-…</p>
+      <div class="hero-chips" id="cChips"></div>
+    </div>
+    <form id="caseForm" class="steps" novalidate autocomplete="off"></form>
+    <section class="panel" id="cHistory" hidden><p class="label">Changes to this case</p><ol class="hist" id="cHist"></ol></section>
+    <div class="savebar">
+      <div class="progress"><span class="label" id="cProg"></span><span class="meter"><i id="cFill"></i></span></div>
+      <button class="btn danger" type="button" id="cDelete" hidden>Delete case</button>
+      <button class="btn" type="button" id="cReset">Clear</button>
+      <button class="btn solid big" type="submit" form="caseForm" id="cSave">Save case</button>
+    </div>
+  </div>
+
+  <!-- UPLOAD -->
+  <div class="view" id="v-upload" hidden>
+    <section class="panel">
+      <p class="label">Add or update cases from a workbook</p>
+      <p class="hint">Upload the regional <b>meningitis line list</b> (.xlsx: its <i>Outbreak linelist</i> and <i>Outbreak linelist-other region</i> sheets are read) or a line list downloaded from this page and filled in. Cases are matched by EPID number. Rows with no EPID number are skipped. Blank cells never erase anything. Codes written in other ways, such as “9 unknown” or “Missing”, are read back to the list. New sub-district names are added to their district. You review every change before it is saved.</p>
+      <input type="file" id="uFile" accept=".xlsx,.xlsm,.csv" hidden>
+      <button class="drop" id="uDrop" type="button">
+        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M28 6H14a4 4 0 0 0-4 4v28a4 4 0 0 0 4 4h20a4 4 0 0 0 4-4V16z"/><path d="M28 6v10h10"/><path d="M24 34V22M19 27l5-5 5 5"/></svg>
+        <strong>Drop the line list here</strong>
+        <span>or click to choose it · .xlsx or .csv, up to 10 MB</span>
+      </button>
+    </section>
+    <section class="panel" id="uPlan" hidden aria-live="polite"></section>
+  </div>
+
+  <!-- REPORTS -->
+  <div class="view" id="v-reports" hidden>
+    <section class="panel">
+      <div class="rkinds" role="tablist" aria-label="Report" id="rKinds"></div>
+      <div class="exports">
+        <span class="label">Export</span>
+        <a class="btn" id="rXlsx" download>Excel (.xlsx)</a>
+        <button class="btn solid" type="button" id="rPdf">PDF</button>
+      </div>
+    </section>
+    <div class="sheet-scroll"><article class="sheet msheet" id="rSheet" aria-live="polite"></article></div>
+  </div>
+
+  <!-- SETUP -->
+  <div class="view" id="v-setup" hidden>
+    <section class="panel">
+      <div class="toolbar"><p class="label">Sub-districts and populations</p><span class="note" id="sCount"></span></div>
+      <p class="hint">The weekly alert and epidemic thresholds of each sub-district come from its population. A sub-district with no population is checked against the small-population case counts below. Sub-districts named in an upload are added here without a population.</p>
+      <div class="tscroll"><table class="mtab edit" id="sTable"></table></div>
+      <div class="toolbar"><button class="btn" type="button" id="sAdd">Add sub-district</button><button class="btn solid" type="button" id="sSave">Save sub-districts</button></div>
+      <p class="err" id="sErr" role="alert"></p>
+    </section>
+    <section class="panel">
+      <p class="label">Thresholds (WHO meningitis belt)</p>
+      <p class="hint">Above the population cut-off, a sub-district is on alert when its weekly attack rate reaches the alert rate, and in epidemic when it reaches the epidemic rate. At or below the cut-off, the week's case count decides.</p>
+      <div class="grid three">
+        <div class="field"><div class="fhead"><label for="tAlert">Alert, cases per 100,000 per week</label></div><input class="in mono" id="tAlert" type="number" min="0.1" step="0.1"></div>
+        <div class="field"><div class="fhead"><label for="tEpi">Epidemic, cases per 100,000 per week</label></div><input class="in mono" id="tEpi" type="number" min="0.1" step="0.1"></div>
+        <div class="field"><div class="fhead"><label for="tCut">Small population: at most</label></div><input class="in mono" id="tCut" type="number" min="0" step="1000"></div>
+        <div class="field"><div class="fhead"><label for="tAc">Small population: alert at cases in a week</label></div><input class="in mono" id="tAc" type="number" min="1"></div>
+        <div class="field"><div class="fhead"><label for="tEc">Small population: epidemic at cases in a week</label></div><input class="in mono" id="tEc" type="number" min="1"></div>
+        <div class="field"><div class="fhead"><label for="tStart">Season starts in epi week</label></div><input class="in mono" id="tStart" type="number" min="1" max="53"></div>
+      </div>
+      <div class="toolbar"><span class="note" id="tNote"></span><button class="btn solid" type="button" id="tSave">Save thresholds</button></div>
+    </section>
+  </div>
+
+  <footer class="site-foot">
+    <span>© <span class="year"></span> {{ org }}. All rights reserved.</span>
+    <span class="support">
+      <span>Support</span>
+      <a href="{{ support.wa_link }}" target="_blank" rel="noopener" aria-label="WhatsApp support {{ support.wa_number }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21l1.65-3.8A9 9 0 1 1 8.4 20.4z"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"/></svg>WhatsApp {{ support.wa_number }}</a>
+      <a href="mailto:{{ support.email }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>{{ support.email }}</a>
+    </span>
+  </footer>
+</div>
+<div class="toast" id="toast" hidden role="status"></div>
+
+{{ data|json_script:"page-data" }}
+<script src="{% static 'core/js/csrf.js' %}"></script>
+<script src="{% static 'meningitis/js/meningitis.js' %}"></script>
+</body>
+</html>

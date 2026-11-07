@@ -1,0 +1,58 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Surveillance Accounts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="{% static 'core/css/base.css' %}">
+<link rel="stylesheet" href="{% static 'accounts/css/accounts.css' %}">
+</head>
+<body>
+<div class="wrap">
+  <nav class="modules" aria-label="Modules">
+    <a href="/start">Start</a><a href="/">AFP 60-day follow-up</a><a href="/idsr">Weekly IDSR</a>
+    <a href="/admin" aria-current="page">Accounts</a>
+    <a class="region-link" href="/profile?next=/admin">Profile</a><a href="/logout">Sign out</a>
+  </nav>
+  <header>
+    <div class="brand">
+      <span class="brand-logo"><img src="{{ logo }}" alt="Ghana Health Service"></span>
+      <h1><span class="slug">SUPPORT · ACCOUNTS</span><span>Accounts</span></h1>
+    </div>
+  </header>
+
+  <div class="secret" id="secret" hidden role="status">
+    <span class="label" id="secretLabel"></span>
+    <code id="secretPw"></code>
+    <span class="hint">Give it to them privately. They choose their own password the first time they sign in with it. It is not shown again.</span>
+    <div class="acts"><button class="btn" type="button" id="copyPw">Copy password</button><button class="btn" type="button" id="hidePw">Done</button></div>
+  </div>
+
+  <section class="panel">
+    <div class="toolbar"><p class="label">Add an account</p></div>
+    <form id="addForm" class="addgrid" novalidate autocomplete="off">
+      <label class="field"><span class="label">Full name</span><input class="in" id="aName"></label>
+      <label class="field"><span class="label">Username</span><input class="in mono" id="aUser" autocapitalize="none" spellcheck="false" placeholder="3–32 letters, numbers, . _ -"></label>
+      <label class="field"><span class="label">Region</span><select class="in" id="aRegion"></select></label>
+      <label class="field"><span class="label">Password (leave blank to make one)</span><input class="in mono" id="aPass" placeholder="At least 8 characters"></label>
+      <div class="acts" style="grid-column:1/-1"><button class="btn solid" type="submit" id="addBtn">Add account</button>
+        <span class="hint">The new account sets its own password at its first sign-in.</span></div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <div class="toolbar"><p class="label">Accounts</p><span class="count" id="count"></span></div>
+    <ul class="users" id="users"></ul>
+    <p class="hint" id="none" hidden>No accounts yet. The first one is created on the login page.</p>
+  </section>
+</div>
+<div class="toast" id="toast" hidden role="status"></div>
+
+{{ data|json_script:"page-data" }}
+<script src="{% static 'core/js/csrf.js' %}"></script>
+<script src="{% static 'accounts/js/accounts.js' %}"></script>
+</body>
+</html>

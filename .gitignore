@@ -1,0 +1,13 @@
+# Patient and account data: never commit
+data/
+private_media/
+db.sqlite3
+.secret_key
+.env
+django-errors.log
+dist/
+
+# Built or cached
+staticfiles/
+__pycache__/
+*.pyc

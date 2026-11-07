@@ -1,0 +1,58 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Surveillance Profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="{% static 'core/css/base.css' %}">
+<link rel="stylesheet" href="{% static 'accounts/css/profile.css' %}">
+</head>
+<body>
+<div class="wrap">
+  <nav class="modules" aria-label="Modules">
+    <a href="/start">Start</a><a href="/">AFP 60-day follow-up</a><a href="/idsr">Weekly IDSR</a>
+    <a href="/admin" id="navAdmin" hidden>Accounts</a>
+    <a class="region-link" href="/profile" aria-current="page">Profile</a><a href="/logout">Sign out</a>
+  </nav>
+  <header>
+    <div class="brand">
+      <span class="brand-logo"><img src="{{ logo }}" alt="Ghana Health Service"></span>
+      <h1><span class="slug">YOUR ACCOUNT</span><span>Profile</span></h1>
+    </div>
+  </header>
+
+  <section class="panel pgrid">
+    <div class="pic">
+      <div class="avatar" id="avatar" aria-label="Profile picture"></div>
+      <div class="acts">
+        <button class="btn" type="button" id="pickBtn">Upload picture</button>
+        <button class="btn danger" type="button" id="dropBtn" hidden>Remove</button>
+      </div>
+      <input type="file" id="file" accept="image/png,image/jpeg" hidden>
+      <span class="hint">PNG or JPEG, under 3 MB. A square photo of your face works best.</span>
+    </div>
+    <form class="form" id="form" novalidate>
+      <label class="field"><span class="label">Full name</span><input class="in" id="name" maxlength="80" autocomplete="name"></label>
+      <label class="field"><span class="label">Cadre</span><select class="in" id="cadre"></select></label>
+      <div class="ro">
+        <div><span class="label">Username</span><b class="mono" id="user"></b></div>
+        <div><span class="label">Region</span><b id="region"></b></div>
+      </div>
+      <div class="acts">
+        <button class="btn solid" type="submit" id="save">Save profile</button>
+        <a class="btn" id="back" href="/start">Back</a>
+        <a class="btn" id="pw" href="/password?next=/profile">Change password</a>
+      </div>
+    </form>
+  </section>
+</div>
+<div class="toast" id="toast" hidden role="status"></div>
+
+{{ data|json_script:"page-data" }}
+<script src="{% static 'core/js/csrf.js' %}"></script>
+<script src="{% static 'accounts/js/profile.js' %}"></script>
+</body>
+</html>

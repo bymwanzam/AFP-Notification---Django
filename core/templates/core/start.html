@@ -1,0 +1,78 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Surveillance Start</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="{% static 'core/css/base.css' %}">
+<link rel="stylesheet" href="{% static 'core/css/start.css' %}">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <span class="brand-logo"><img src="{{ logo }}" alt="Ghana Health Service"></span>
+      <h1><span class="slug">GHANA HEALTH SERVICE · SURVEILLANCE</span><span id="pageTitle">Choose your region</span></h1>
+    </div>
+    <span style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn" href="/admin" id="adminBtn" hidden>Accounts</a><a class="btn" href="/profile?next=/start">Profile</a><a class="btn" href="/logout">Sign out</a></span>
+  </header>
+
+  <a class="me" id="me" href="/profile?next=/start" hidden>
+    <span class="me-pic" id="mePic"></span>
+    <span class="me-text"><b id="meName"></b><span id="meCadre"></span></span>
+    <span class="me-go" id="meGo">Edit profile</span>
+  </a>
+
+  <section class="panel pick">
+    <p class="hint" id="pickHint">Everything you open next works for this region only: its districts in data entry, its cases in the alerts, and its figures in the reports. You can change it at any time from the link at the top of each page.</p>
+    <label class="field"><span class="label">Region</span><select class="in" id="region"></select></label>
+    <div id="about" hidden>
+      <div class="facts">
+        <div class="fact"><span class="label" id="fDistLabel">Districts</span><b id="fDist">0</b></div>
+        <div class="fact"><span class="label">AFP cases in the register</span><b id="fAfp">0</b></div>
+        <div class="fact"><span class="label">IDSR weeks on file</span><b id="fWeeks">0</b></div>
+        <div class="fact"><span class="label">Meningitis cases</span><b id="fMen">0</b></div>
+      </div>
+      <div class="dchips" id="chips" style="margin-top:12px"></div>
+    </div>
+  </section>
+
+  <div class="mods">
+    <button class="mod" type="button" data-go="/" id="goAfp" disabled>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+      <em>Module</em><strong>AFP 60-day follow-up</strong>
+      <span>Follow-up alerts, new cases, update from file and the district report.</span>
+    </button>
+    <button class="mod" type="button" data-go="/idsr" id="goIdsr" disabled>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
+      <em>Module</em><strong>Weekly IDSR</strong>
+      <span>Weekly data entry by district, Excel/CSV upload and the epidemiological bulletin.</span>
+    </button>
+    <button class="mod" type="button" data-go="/meningitis" id="goMen" disabled>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>
+      <em>Module</em><strong>Meningitis</strong>
+      <span>Case line list, upload of the regional workbook, thresholds by sub-district and the weekly reports.</span>
+    </button>
+  </div>
+
+  <footer class="site-foot">
+    <span>© <span class="year"></span> Ghana Health Service. All rights reserved.</span>
+    <span class="support">
+      <span>Support</span>
+      <a href="{{ support.wa_link }}" target="_blank" rel="noopener" aria-label="WhatsApp support {{ support.wa_number }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21l1.65-3.8A9 9 0 1 1 8.4 20.4z"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"/></svg>WhatsApp {{ support.wa_number }}</a>
+      <a href="mailto:{{ support.email }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>{{ support.email }}</a>
+    </span>
+  </footer>
+</div>
+<div class="toast" id="toast" hidden role="status"></div>
+
+{{ data|json_script:"page-data" }}
+<script src="{% static 'core/js/csrf.js' %}"></script>
+<script src="{% static 'core/js/start.js' %}"></script>
+</body>
+</html>
